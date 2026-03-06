@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حافظ كلمة | Vocab Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0e17;
+    --surface: #1a1929;
+    --card: #231f3a;
+    --accent: #ff6b35;
+    --accent2: #ffd166;
+    --green: #06d6a0;
+    --red: #ef476f;
+    --text: #fffffe;
+    --muted: #a7a3c2;
+    --border: rgba(255,255,255,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(255,107,53,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(6,214,160,0.06) 0%, transparent 50%);
+  }
+
+  header {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  .day-badge {
+    background: rgba(255,107,53,0.15);
+    border: 1px solid rgba(255,107,53,0.3);
+    color: var(--accent);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .progress-section {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 28px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* Flashcard */
+  .card-wrapper {
+    width: 100%;
+    max-width: 600px;
+    perspective: 1200px;
+    margin-bottom: 28px;
+  }
+
+  .card {
+    width: 100%;
+    min-height: 320px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    min-height: 320px;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    padding: 40px 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .card-front {
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  }
+
+  .card-back {
+    background: linear-gradient(135deg, #1e1b3a 0%, #2a2048 100%);
+    border: 1px solid rgba(255,209,102,0.2);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    transform: rotateY(180deg);
+  }
+
+  .word-emoji { font-size: 52px; margin-bottom: 16px; }
+
+  .word-english {
+    font-family: 'Space Mono', monospace;
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+
+  .word-topic {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .tap-hint {
+    position: absolute;
+    bottom: 16px;
+    font-size: 12px;
+    color: rgba(167,163,194,0.5);
+    font-family: 'Space Mono', monospace;
+  }
+
+  .word-arabic {
+    font-size: 34px;
+    font-weight: 900;
+    color: var(--accent2);
+    margin-bottom: 16px;
+  }
+
+  .word-example {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-style: italic;
+    max-width: 400px;
+    direction: ltr;
+    text-align: center;
+  }
+
+  .example-label {
+    font-size: 11px;
+    color: var(--green);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  /* Buttons */
+  .action-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 24px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn:active { transform: scale(0.96); }
+  .btn-sub { font-size: 11px; font-weight: 400; opacity: 0.7; font-family: 'Space Mono', monospace; }
+
+  .btn-knew {
+    background: rgba(6,214,160,0.15);
+    border: 1px solid rgba(6,214,160,0.4);
+    color: var(--green);
+  }
+  .btn-knew:hover { background: rgba(6,214,160,0.25); }
+
+  .btn-again {
+    background: rgba(239,71,111,0.15);
+    border: 1px solid rgba(239,71,111,0.3);
+    color: var(--red);
+  }
+  .btn-again:hover { background: rgba(239,71,111,0.25); }
+
+  /* Nav */
+  .nav-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 28px;
+  }
+
+  .btn-nav {
+    flex: 1;
+    padding: 12px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--muted);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-nav:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+  /* Day words list */
+  .words-list {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+
+  .word-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-family: 'Space Mono', monospace;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .word-pill.active {
+    background: rgba(255,107,53,0.15);
+    border-color: rgba(255,107,53,0.4);
+    color: var(--accent);
+  }
+
+  .word-pill.known {
+    background: rgba(6,214,160,0.1);
+    border-color: rgba(6,214,160,0.3);
+    color: var(--green);
+  }
+
+  /* Session complete */
+  .done-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 20px;
+    width: 100%; max-width: 600px;
+  }
+
+  .done-screen.visible { display: flex; }
+
+  .done-emoji { font-size: 72px; margin-bottom: 20px; animation: bounce 1s ease infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+
+  .done-title { font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+  .done-sub { color: var(--muted); font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
+
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+    width: 100%;
+  }
+
+  .stat-box {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 12px;
+    text-align: center;
+  }
+
+  .stat-num { font-size: 32px; font-weight: 900; font-family: 'Space Mono', monospace; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .btn-restart {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent), #ff9a3c);
+    border: none;
+    border-radius: 14px;
+    color: #fff;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn-restart:hover { opacity: 0.9; }
+
+  /* Day selector */
+  .day-selector {
+    width: 100%; max-width: 600px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .day-label { color: var(--muted); font-size: 13px; white-space: nowrap; }
+
+  .day-select {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .total-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .card-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">VOCAB</div>
+  <div class="day-badge" id="dayBadge">اليوم 1</div>
+</header>
+
+<div class="day-selector">
+  <span class="day-label">اختر اليوم:</span>
+  <select class="day-select" id="daySelect" onchange="loadDay(this.value)"></select>
+</div>
+
+<!-- Main training area -->
+<div id="mainArea">
+  <div class="progress-section">
+    <div class="progress-label">
+      <span id="progressText">الكلمة 1 من 5</span>
+      <span id="knownCount">✓ 0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="words-list" id="wordPills"></div>
+
+  <div class="card-wrapper">
+    <div class="card" id="flashcard" onclick="flipCard()">
+      <div class="card-face card-front">
+        <div class="word-emoji" id="cardEmoji">😊</div>
+        <div class="card-number" id="cardNumber">1 / 5</div>
+        <div class="word-english" id="cardEnglish">happy</div>
+        <div class="word-topic" id="cardTopic">FEELINGS</div>
+        <div class="tap-hint">اضغط لترى المعنى</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="word-arabic" id="cardArabic">سعيد</div>
+        <span class="example-label">مثال</span>
+        <div class="word-example" id="cardExample">She looked happy today.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-row" id="actionRow">
+    <button class="btn btn-again" onclick="markAgain()">
+      ✗ مش عارفها
+      <span class="btn-sub">again</span>
+    </button>
+    <button class="btn btn-knew" onclick="markKnew()">
+      ✓ عارفها
+      <span class="btn-sub">got it!</span>
+    </button>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-nav" onclick="prevWord()">→ السابقة</button>
+    <button class="btn-nav" onclick="nextWord()">التالية ←</button>
+  </div>
+
+  <div class="total-badge" id="totalBadge"></div>
+</div>
+
+<!-- Done screen -->
+<div class="done-screen" id="doneScreen">
+  <div class="done-emoji">🎉</div>
+  <div class="done-title">أنهيت اليوم!</div>
+  <div class="done-sub">كملت الكلمات الخمسة لهذا اليوم.<br>كمّل كل يوم وهتحفظ الـ 1291 كلمة!</div>
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-num" style="color:var(--green)" id="statKnew">0</div>
+      <div class="stat-label">عرفتها</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" style="color:var(--accent2)" id="statTotal">5</div>
+      <div class="stat-label">إجمالي اليوم</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num" style="color:var(--accent)" id="statDayNum">1</div>
+      <div class="stat-label">رقم اليوم</div>
+    </div>
+  </div>
+  <button class="btn-restart" onclick="nextDay()">اليوم التالي ←</button>
+</div>
+
+<script>
+// =============================================
+// ALL 1291 WORDS
+// =============================================
+const allWords = [
+  // 1. Feelings & Emotions
+  {e:"admire",a:"يُعجب بـ / إعجابًا",ex:"I admire her courage.",em:"😍",t:"Feelings"},
+  {e:"afraid",a:"خائف",ex:"He was afraid of the dark.",em:"😨",t:"Feelings"},
+  {e:"ambitious",a:"طموح",ex:"She is very ambitious.",em:"🚀",t:"Feelings"},
+  {e:"annoy",a:"يُزعج / غيظ",ex:"Loud music annoys me.",em:"😤",t:"Feelings"},
+  {e:"annoyed",a:"غاضب / مستاء",ex:"She felt annoyed by the delay.",em:"😠",t:"Feelings"},
+  {e:"anxious",a:"قلق / مضطرب",ex:"He was anxious before the exam.",em:"😰",t:"Feelings"},
+  {e:"ashamed",a:"خجول / شعر بالعار",ex:"She was ashamed of her mistake.",em:"😳",t:"Feelings"},
+  {e:"bitter",a:"مرير / حانق",ex:"He felt bitter after losing the job.",em:"😣",t:"Feelings"},
+  {e:"calm",a:"هادئ / يهدئ",ex:"Stay calm and take a deep breath.",em:"😌",t:"Feelings"},
+  {e:"cheerful",a:"مبتهج / مرح",ex:"She gave a cheerful smile.",em:"😄",t:"Feelings"},
+  {e:"confident",a:"واثق من نفسه",ex:"He spoke in a confident voice.",em:"💪",t:"Feelings"},
+  {e:"confused",a:"محتار / مرتبك",ex:"I was confused by the instructions.",em:"😵",t:"Feelings"},
+  {e:"courage",a:"شجاعة",ex:"It takes courage to speak the truth.",em:"🦁",t:"Feelings"},
+  {e:"curious",a:"فضولي",ex:"Children are naturally curious.",em:"🔍",t:"Feelings"},
+  {e:"delighted",a:"مبتهج / مسرور جدًا",ex:"She was delighted with the gift.",em:"🤩",t:"Feelings"},
+  {e:"depressed",a:"مكتئب / محبط",ex:"He felt depressed after the news.",em:"😞",t:"Feelings"},
+  {e:"desperate",a:"يائس / محتاج بشدة",ex:"She was desperate for help.",em:"😫",t:"Feelings"},
+  {e:"disappointed",a:"خائب الأمل",ex:"He was disappointed with the result.",em:"😔",t:"Feelings"},
+  {e:"embarrassed",a:"محرج / خجلان",ex:"She felt embarrassed in front of everyone.",em:"😳",t:"Feelings"},
+  {e:"embarrassing",a:"محرج للآخرين",ex:"It was an embarrassing moment.",em:"😲",t:"Feelings"},
+  {e:"emotion",a:"مشاعر / عاطفة",ex:"Music can trigger strong emotions.",em:"💓",t:"Feelings"},
+  {e:"emotional",a:"عاطفي / انفعالي",ex:"She gave an emotional speech.",em:"💓",t:"Feelings"},
+  {e:"enthusiasm",a:"حماس",ex:"She showed great enthusiasm.",em:"🔥",t:"Feelings"},
+  {e:"enthusiastic",a:"متحمس",ex:"The team was enthusiastic about the idea.",em:"🙌",t:"Feelings"},
+  {e:"fear",a:"خوف / يخشى",ex:"Fear of failure is common.",em:"😱",t:"Feelings"},
+  {e:"frightened",a:"خائف / مرعوب",ex:"The child was frightened by the storm.",em:"😨",t:"Feelings"},
+  {e:"frightening",a:"مخيف",ex:"The movie was frightening.",em:"😱",t:"Feelings"},
+  {e:"glad",a:"سعيد / مسرور",ex:"I'm glad you came today.",em:"😊",t:"Feelings"},
+  {e:"grateful",a:"ممتنن / شاكر",ex:"She was grateful for his help.",em:"🙏",t:"Feelings"},
+  {e:"guilty",a:"مذنب / يشعر بالذنب",ex:"He felt guilty for lying.",em:"😟",t:"Feelings"},
+  {e:"horrible",a:"مريع / فظيع",ex:"What a horrible smell!",em:"😖",t:"Feelings"},
+  {e:"humour",a:"روح الدعابة / فكاهة",ex:"He has a great sense of humour.",em:"😂",t:"Feelings"},
+  {e:"humorous",a:"فكاهي / مضحك",ex:"He told a humorous story.",em:"😂",t:"Feelings"},
+  {e:"impatient",a:"نافد الصبر",ex:"She was impatient to get the results.",em:"⏰",t:"Feelings"},
+  {e:"joy",a:"بهجة / فرح",ex:"The children played with joy.",em:"🎉",t:"Feelings"},
+  {e:"keen",a:"متحمس / مشتاق",ex:"He is keen on learning new things.",em:"🌟",t:"Feelings"},
+  {e:"lonely",a:"وحيد",ex:"She felt lonely in the new city.",em:"🥺",t:"Feelings"},
+  {e:"nervous",a:"متوتر / قلق",ex:"He was nervous before the interview.",em:"😬",t:"Feelings"},
+  {e:"passion",a:"شغف / عاطفة قوية",ex:"She has a passion for music.",em:"❤️‍🔥",t:"Feelings"},
+  {e:"patient",a:"صبور",ex:"Be patient – results take time.",em:"🧘",t:"Feelings"},
+  {e:"peaceful",a:"هادئ / مسالم",ex:"The countryside is very peaceful.",em:"☮️",t:"Feelings"},
+  {e:"pleased",a:"مسرور / راضٍ",ex:"I'm pleased to meet you.",em:"😀",t:"Feelings"},
+  {e:"pleasure",a:"متعة / سرور",ex:"It's a pleasure to work with you.",em:"✨",t:"Feelings"},
+  {e:"pride",a:"فخر / اعتزاز",ex:"She spoke with pride.",em:"🏆",t:"Feelings"},
+  {e:"regret",a:"ندم / أسف",ex:"He regrets not studying harder.",em:"😞",t:"Feelings"},
+  {e:"relief",a:"ارتياح / تخفيف",ex:"She sighed with relief after the exam.",em:"😮‍💨",t:"Feelings"},
+  {e:"sad",a:"حزين",ex:"She felt sad when her friend left.",em:"😢",t:"Feelings"},
+  {e:"scared",a:"خائف / فزع",ex:"He was scared of spiders.",em:"😱",t:"Feelings"},
+  {e:"scary",a:"مخيف",ex:"The horror film was very scary.",em:"😱",t:"Feelings"},
+  {e:"shame",a:"عار / خجل",ex:"He felt a sense of shame.",em:"😓",t:"Feelings"},
+  {e:"shocked",a:"مصدوم / متفاجئ",ex:"She was shocked by the news.",em:"😲",t:"Feelings"},
+  {e:"sympathy",a:"تعاطف / مواساة",ex:"He expressed sympathy for her loss.",em:"🤝",t:"Feelings"},
+  {e:"upset",a:"مزعجة / مضطرب",ex:"She was upset about the decision.",em:"😟",t:"Feelings"},
+  // 2. Personality
+  {e:"attitude",a:"موقف / سلوك / طريقة تفكير",ex:"A positive attitude helps in hard times.",em:"🧠",t:"Personality"},
+  {e:"decent",a:"لائق / محترم / جيد بما يكفي",ex:"He is a decent and honest man.",em:"😇",t:"Personality"},
+  {e:"dishonest",a:"غير أمين / غشاش",ex:"It's dishonest to cheat on a test.",em:"🤫",t:"Personality"},
+  {e:"honest",a:"صادق / أمين",ex:"Be honest about what happened.",em:"😇",t:"Personality"},
+  {e:"elderly",a:"مسن / كبير في السن",ex:"We must respect the elderly.",em:"👴",t:"Personality"},
+  {e:"gentle",a:"لطيف / رقيق / هادئ",ex:"He has a gentle and kind nature.",em:"🧓",t:"Personality"},
+  {e:"generous",a:"كريم / سخي",ex:"She was generous with her time.",em:"💝",t:"Personality"},
+  {e:"indirect",a:"غير مباشر",ex:"His answer was indirect.",em:"🤐",t:"Personality"},
+  {e:"independent",a:"مستقل",ex:"She became more independent after college.",em:"🦅",t:"Personality"},
+  {e:"loyal",a:"مخلص / وفي",ex:"He is a loyal friend.",em:"🏅",t:"Personality"},
+  {e:"neat",a:"أنيق / مرتب",ex:"Keep your desk neat and tidy.",em:"🪞",t:"Personality"},
+  {e:"odd",a:"غريب / فردي",ex:"He has some odd habits.",em:"😔",t:"Personality"},
+  {e:"ordinary",a:"عادي / اعتيادي",ex:"It was just an ordinary day.",em:"📜",t:"Personality"},
+  {e:"polite",a:"مؤدب / لبق",ex:"Always be polite to guests.",em:"😌",t:"Personality"},
+  {e:"practical",a:"عملي / واقعي",ex:"She gave practical advice.",em:"🧠",t:"Personality"},
+  {e:"pure",a:"نقي / طاهر",ex:"He has a pure heart.",em:"💎",t:"Personality"},
+  {e:"sensible",a:"عاقل / حكيم",ex:"That was a sensible decision.",em:"💡",t:"Personality"},
+  {e:"sincere",a:"صادق / مخلص",ex:"She gave a sincere apology.",em:"💙",t:"Personality"},
+  {e:"sociable",a:"اجتماعي / محبوب للناس",ex:"He is very sociable at parties.",em:"🤝",t:"Personality"},
+  {e:"strict",a:"صارم / متشدد",ex:"The teacher was very strict.",em:"💀",t:"Personality"},
+  {e:"wise",a:"حكيم / ذكي",ex:"He made a wise decision.",em:"🧠",t:"Personality"},
+  {e:"attractive",a:"جذاب / جميل",ex:"She has an attractive personality.",em:"😍",t:"Personality"},
+  {e:"thoughtful",a:"مراعٍ للآخرين / متأمل / مدروس",ex:"He is always thoughtful.",em:"🤔",t:"Personality"},
+  {e:"tough",a:"قوي / صلب / صعب",ex:"Life is tough but manageable.",em:"🏋️",t:"Personality"},
+  // 3. Education
+  {e:"academic",a:"أكاديمي / دراسي",ex:"She has a strong academic record.",em:"🎓",t:"Education"},
+  {e:"achieve",a:"يحقق / ينجز",ex:"She worked hard to achieve her goals.",em:"🎯",t:"Education"},
+  {e:"achievement",a:"إنجاز / تحقيق",ex:"Graduating was a great achievement.",em:"🏅",t:"Education"},
+  {e:"acknowledge",a:"يقر بـ / يعترف",ex:"He acknowledged his mistake.",em:"📜",t:"Education"},
+  {e:"acquire",a:"يكتسب / حصل على",ex:"She acquired new skills at work.",em:"🎓",t:"Education"},
+  {e:"assessment",a:"تقييم / تقدير",ex:"The teacher gave a fair assessment.",em:"📊",t:"Education"},
+  {e:"assignment",a:"واجب / مهمة",ex:"He submitted the assignment on time.",em:"📝",t:"Education"},
+  {e:"attend",a:"يحضر / يداوم",ex:"She attends every lecture.",em:"📚",t:"Education"},
+  {e:"concentrate",a:"يركز / ينتبه",ex:"Please concentrate on the lesson.",em:"🧠",t:"Education"},
+  {e:"definition",a:"تعريف",ex:"Look up the definition in a dictionary.",em:"📖",t:"Education"},
+  {e:"degree",a:"درجة / شهادة علمية",ex:"She has a degree in biology.",em:"🎓",t:"Education"},
+  {e:"discipline",a:"انضباط / نظام",ex:"Good discipline is key to success.",em:"📏",t:"Education"},
+  {e:"educate",a:"يعلم / يثقف",ex:"We must educate children about safety.",em:"🏫",t:"Education"},
+  {e:"educated",a:"متعلم / مثقف",ex:"She is a well-educated professional.",em:"📚",t:"Education"},
+  {e:"examination",a:"امتحان / فحص",ex:"The final examination is next week.",em:"📄",t:"Education"},
+  {e:"examine",a:"يفحص / يراجع",ex:"The doctor examined the patient.",em:"🔬",t:"Education"},
+  {e:"explain",a:"يشرح / يوضح",ex:"Can you explain this concept?",em:"💬",t:"Education"},
+  {e:"explanation",a:"تفسير / شرح",ex:"His explanation was very clear.",em:"📖",t:"Education"},
+  {e:"graduate",a:"يتخرج / خريج",ex:"He graduated from university last year.",em:"🎓",t:"Education"},
+  {e:"illustrate",a:"يوضح بمثال / يرسم",ex:"She illustrated the point with a diagram.",em:"📐",t:"Education"},
+  {e:"instruction",a:"تعليمات / توجيه",ex:"Follow the instructions carefully.",em:"🎤",t:"Education"},
+  {e:"instructor",a:"مدرب / معلم",ex:"The instructor gave clear directions.",em:"👨‍🏫",t:"Education"},
+  {e:"intelligence",a:"ذكاء",ex:"Intelligence is not just about grades.",em:"🧩",t:"Education"},
+  {e:"intelligent",a:"ذكي",ex:"She is an intelligent student.",em:"🦉",t:"Education"},
+  {e:"knowledge",a:"معرفة / علم",ex:"Knowledge is power.",em:"💡",t:"Education"},
+  {e:"laboratory",a:"مختبر / معمل",ex:"They ran experiments in the laboratory.",em:"🔬",t:"Education"},
+  {e:"lecture",a:"محاضرة / يلقي محاضرة",ex:"The lecture lasted two hours.",em:"🎤",t:"Education"},
+  {e:"method",a:"طريقة / أسلوب",ex:"The teacher used a new teaching method.",em:"🛠️",t:"Education"},
+  {e:"pupil",a:"تلميذ / طالب",ex:"Each pupil received a textbook.",em:"🧑‍🎓",t:"Education"},
+  {e:"qualification",a:"شهادة / مؤهل",ex:"You need the right qualifications for this job.",em:"📜",t:"Education"},
+  {e:"qualified",a:"مؤهل",ex:"She is fully qualified to teach.",em:"✅",t:"Education"},
+  {e:"qualify",a:"يتأهل / يؤهل",ex:"He qualified as a doctor last year.",em:"✅",t:"Education"},
+  {e:"research",a:"بحث / يبحث",ex:"He did research on climate change.",em:"🔭",t:"Education"},
+  {e:"scholarship",a:"منحة دراسية",ex:"She won a scholarship to study abroad.",em:"💰",t:"Education"},
+  {e:"skill",a:"مهارة",ex:"Communication is a vital skill.",em:"⚡",t:"Education"},
+  {e:"study",a:"يدرس / دراسة",ex:"She studies every night.",em:"📖",t:"Education"},
+  {e:"subject",a:"مادة دراسية / موضوع",ex:"Math is her favourite subject.",em:"📐",t:"Education"},
+  {e:"summarize",a:"يلخص",ex:"Please summarize the article.",em:"✍️",t:"Education"},
+  {e:"summary",a:"ملخص",ex:"Write a short summary of the text.",em:"📋",t:"Education"},
+  {e:"talent",a:"موهبة",ex:"She has a real talent for art.",em:"🌟",t:"Education"},
+  {e:"talented",a:"موهوب",ex:"He is a talented musician.",em:"🎨",t:"Education"},
+  {e:"theory",a:"نظرية",ex:"Darwin proposed the theory of evolution.",em:"🔑",t:"Education"},
+  {e:"training",a:"تدريب",ex:"She completed a training program.",em:"💼",t:"Education"},
+  {e:"university",a:"جامعة",ex:"He applied to three universities.",em:"🏛️",t:"Education"},
+  // 4. Career & Work
+  {e:"agency",a:"وكالة / مكتب",ex:"She works for a travel agency.",em:"🏢",t:"Career"},
+  {e:"agent",a:"وكيل / عميل",ex:"The agent negotiated the deal.",em:"🕵️",t:"Career"},
+  {e:"apply",a:"يتقدم بطلب / يطبق",ex:"He applied for the job online.",em:"📨",t:"Career"},
+  {e:"appointment",a:"موعد / تعيين",ex:"I have a doctor's appointment at 3pm.",em:"📅",t:"Career"},
+  {e:"budget",a:"الميزانية / يعد الميزانية",ex:"We need to stick to the budget.",em:"💰",t:"Career"},
+  {e:"career",a:"مسيرة مهنية / وظيفة",ex:"She has built a successful career.",em:"🚀",t:"Career"},
+  {e:"colleague",a:"زميل في العمل",ex:"My colleagues are very supportive.",em:"🤝",t:"Career"},
+  {e:"commit",a:"يلتزم / يرتكب",ex:"He committed to finishing the project.",em:"✊",t:"Career"},
+  {e:"commitment",a:"التزام / تعهد",ex:"The job requires full commitment.",em:"🔗",t:"Career"},
+  {e:"company",a:"شركة / رفقة",ex:"She runs her own company.",em:"🏬",t:"Career"},
+  {e:"competitive",a:"تنافسي",ex:"The job market is very competitive.",em:"🏆",t:"Career"},
+  {e:"competitor",a:"منافس",ex:"Our main competitor is launching a new product.",em:"🏆",t:"Career"},
+  {e:"conduct",a:"يدير / يجري / سلوك",ex:"He conducted the meeting professionally.",em:"💬",t:"Career"},
+  {e:"corporate",a:"شركات / مؤسسي",ex:"She works in the corporate sector.",em:"💼",t:"Career"},
+  {e:"employer",a:"صاحب عمل",ex:"The employer offered good benefits.",em:"👔",t:"Career"},
+  {e:"employment",a:"توظيف / عمل",ex:"Employment rates are rising.",em:"👷",t:"Career"},
+  {e:"employee",a:"موظف / عامل",ex:"She is a dedicated employee.",em:"👩‍💼",t:"Career"},
+  {e:"employ",a:"يوظف / يستخدم",ex:"The company employs 500 workers.",em:"💼",t:"Career"},
+  {e:"experience",a:"خبرة / تجربة",ex:"He has five years of experience.",em:"🧳",t:"Career"},
+  {e:"expert",a:"خبير / متخصص",ex:"She is an expert in marketing.",em:"🎯",t:"Career"},
+  {e:"fund",a:"صندوق / يموّل",ex:"The project was funded by the government.",em:"💵",t:"Career"},
+  {e:"hire",a:"يوظف / يستأجر",ex:"They hired three new staff members.",em:"📋",t:"Career"},
+  {e:"income",a:"دخل / راتب",ex:"His income increased this year.",em:"💵",t:"Career"},
+  {e:"industry",a:"صناعة / قطاع",ex:"The tech industry is growing fast.",em:"🏭",t:"Career"},
+  {e:"industrial",a:"صناعي",ex:"The town is in an industrial zone.",em:"🏭",t:"Career"},
+  {e:"interview",a:"مقابلة / يجري مقابلة",ex:"She passed the job interview.",em:"🎙️",t:"Career"},
+  {e:"invest",a:"يستثمر",ex:"He invested in the stock market.",em:"📈",t:"Career"},
+  {e:"labour",a:"عمل / جهد / عمال",ex:"Manual labour can be tiring.",em:"🔨",t:"Career"},
+  {e:"manager",a:"مدير",ex:"The manager approved the plan.",em:"👨‍💼",t:"Career"},
+  {e:"occupation",a:"مهنة / وظيفة",ex:"His occupation is listed as engineer.",em:"💼",t:"Career"},
+  {e:"operate",a:"يدير / يعمل",ex:"She operates the machine daily.",em:"⚙️",t:"Career"},
+  {e:"operation",a:"عملية / تشغيل",ex:"The operation ran smoothly.",em:"⚙️",t:"Career"},
+  {e:"profession",a:"مهنة راقية",ex:"Teaching is a noble profession.",em:"🩺",t:"Career"},
+  {e:"profit",a:"ربح / فائدة",ex:"The company made a large profit.",em:"💰",t:"Career"},
+  {e:"promote",a:"يروج / يرقي",ex:"He was promoted to manager.",em:"📢",t:"Career"},
+  {e:"salary",a:"راتب شهري",ex:"Her salary increased after the promotion.",em:"💵",t:"Career"},
+  {e:"sector",a:"قطاع / مجال",ex:"She works in the public sector.",em:"🏗️",t:"Career"},
+  {e:"staff",a:"طاقم / موظفون",ex:"The staff held a meeting this morning.",em:"👥",t:"Career"},
+  {e:"unemployed",a:"عاطل عن العمل",ex:"He has been unemployed for six months.",em:"🚫",t:"Career"},
+  {e:"unemployment",a:"بطالة",ex:"Youth unemployment is a serious issue.",em:"📉",t:"Career"},
+  {e:"wage",a:"أجر / راتب أسبوعي",ex:"Minimum wage has been raised.",em:"💴",t:"Career"},
+  // 5. Society & Law
+  {e:"accuse",a:"يتهم / يوجه اتهامًا",ex:"He was accused of theft.",em:"👉",t:"Society"},
+  {e:"arrest",a:"يعتقل / القبض على",ex:"The police arrested the suspect.",em:"🚔",t:"Society"},
+  {e:"authority",a:"سلطة / صلاحية",ex:"The police have authority to arrest people.",em:"🏛️",t:"Society"},
+  {e:"blame",a:"لوم / يلقي اللوم",ex:"Don't blame others for your mistakes.",em:"😤",t:"Society"},
+  {e:"citizen",a:"مواطن",ex:"Every citizen has rights and duties.",em:"🪪",t:"Society"},
+  {e:"civil",a:"مدني / حضاري",ex:"He filed a civil lawsuit.",em:"🏙️",t:"Society"},
+  {e:"claim",a:"مطالبة / يدعي",ex:"She claimed the money was hers.",em:"🗣️",t:"Society"},
+  {e:"community",a:"مجتمع / منطقة",ex:"The community came together to help.",em:"🏘️",t:"Society"},
+  {e:"conflict",a:"نزاع / صراع",ex:"The conflict lasted for years.",em:"⚔️",t:"Society"},
+  {e:"council",a:"مجلس / هيئة",ex:"The city council voted on the plan.",em:"🏛️",t:"Society"},
+  {e:"court",a:"محكمة / ملعب",ex:"The case went to court.",em:"⚖️",t:"Society"},
+  {e:"crime",a:"جريمة",ex:"Crime rates have fallen this year.",em:"🔪",t:"Society"},
+  {e:"criminal",a:"مجرم / جنائي",ex:"He has a criminal record.",em:"👿",t:"Society"},
+  {e:"cruel",a:"قاسٍ / وحيش",ex:"It is cruel to hurt animals.",em:"😈",t:"Society"},
+  {e:"culture",a:"ثقافة",ex:"Egypt has a rich culture.",em:"🌍",t:"Society"},
+  {e:"cultural",a:"ثقافي",ex:"The city has a rich cultural heritage.",em:"🌍",t:"Society"},
+  {e:"democracy",a:"ديمقراطية",ex:"Democracy gives people a voice.",em:"🗳️",t:"Society"},
+  {e:"deny",a:"ينكر / يرفض",ex:"She denied stealing the money.",em:"🙅",t:"Society"},
+  {e:"district",a:"منطقة / حي",ex:"He lives in the central district.",em:"📍",t:"Society"},
+  {e:"divorce",a:"طالق / يطلق",ex:"They decided to get a divorce.",em:"💔",t:"Society"},
+  {e:"domestic",a:"محلي / منزلي",ex:"Domestic violence is a serious problem.",em:"🏠",t:"Society"},
+  {e:"dominate",a:"يهيمن / سيطر على",ex:"He tended to dominate every conversation.",em:"🔷",t:"Society"},
+  {e:"duty",a:"واجب / مهمة",ex:"It is your duty to vote.",em:"📋",t:"Society"},
+  {e:"elect",a:"ينتخب",ex:"People elect their leaders.",em:"🗳️",t:"Society"},
+  {e:"election",a:"انتخابات",ex:"The election results were announced.",em:"🗳️",t:"Society"},
+  {e:"equal",a:"متساوٍ / يساوي",ex:"Everyone deserves equal rights.",em:"⚖️",t:"Society"},
+  {e:"equally",a:"بالتساوي",ex:"The prize was divided equally.",em:"⚖️",t:"Society"},
+  {e:"evidence",a:"دليل / بينة",ex:"The police found evidence at the scene.",em:"🔍",t:"Society"},
+  {e:"govern",a:"يحكم / يسيّر",ex:"Who governs this region?",em:"👑",t:"Society"},
+  {e:"government",a:"حكومة",ex:"The government passed a new law.",em:"🏛️",t:"Society"},
+  {e:"guilty",a:"مذنب",ex:"The jury found him guilty.",em:"😟",t:"Society"},
+  {e:"innocent",a:"بريء",ex:"She was found innocent.",em:"😇",t:"Society"},
+  {e:"justice",a:"عدالة",ex:"Everyone deserves justice.",em:"⚖️",t:"Society"},
+  {e:"justify",a:"يبرر / يسوّغ",ex:"Can you justify your decision?",em:"⚖️",t:"Society"},
+  {e:"law",a:"قانون",ex:"The new law takes effect next month.",em:"📜",t:"Society"},
+  {e:"moral",a:"أخلاقي / مبدأ أخلاقي",ex:"He has strong moral values.",em:"💎",t:"Society"},
+  {e:"obey",a:"يطيع / يمتثل",ex:"Children must obey safety rules.",em:"🙏",t:"Society"},
+  {e:"offence",a:"جريمة / مخالفة",ex:"Speeding is a serious offence.",em:"⚠️",t:"Society"},
+  {e:"offend",a:"يسيء / يهين",ex:"His words offended many people.",em:"🚫",t:"Society"},
+  {e:"offensive",a:"مسيء / هجومي",ex:"His comment was offensive.",em:"🚫",t:"Society"},
+  {e:"oppose",a:"يعارض / يقاوم",ex:"Many people oppose the new policy.",em:"✋",t:"Society"},
+  {e:"opposed",a:"معارض",ex:"She was opposed to the plan.",em:"✋",t:"Society"},
+  {e:"opposite",a:"مقابل / عكس",ex:"They sat on opposite sides of the table.",em:"↔️",t:"Society"},
+  {e:"opposition",a:"معارضة",ex:"The opposition party rejected the bill.",em:"✋",t:"Society"},
+  {e:"parliament",a:"برلمان",ex:"The parliament debated the new bill.",em:"🏛️",t:"Society"},
+  {e:"permission",a:"إذن / موافقة",ex:"You need permission to enter.",em:"🔑",t:"Society"},
+  {e:"policy",a:"سياسة / نهج",ex:"The government changed its tax policy.",em:"📋",t:"Society"},
+  {e:"politician",a:"سياسي",ex:"The politician gave a speech.",em:"🎙️",t:"Society"},
+  {e:"political",a:"سياسي",ex:"Political debate is important in democracy.",em:"🎙️",t:"Society"},
+  {e:"protest",a:"احتجاج / يحتج",ex:"Thousands joined the protest.",em:"✊",t:"Society"},
+  {e:"punish",a:"يعاقب",ex:"The thief was punished by the court.",em:"👮",t:"Society"},
+  {e:"punishment",a:"عقوبة",ex:"The punishment should fit the crime.",em:"🔒",t:"Society"},
+  {e:"regulation",a:"لائحة / تنظيم",ex:"New regulations were introduced.",em:"📜",t:"Society"},
+  {e:"reject",a:"يرفض",ex:"The court rejected his appeal.",em:"❌",t:"Society"},
+  {e:"responsibility",a:"مسؤولية",ex:"He took responsibility for the mistake.",em:"🧾",t:"Society"},
+  {e:"responsible",a:"مسؤول",ex:"She is responsible for the project.",em:"🧾",t:"Society"},
+  {e:"right",a:"حق / صواب",ex:"Freedom of speech is a basic right.",em:"✅",t:"Society"},
+  {e:"royal",a:"ملكي",ex:"They visited the royal palace.",em:"👑",t:"Society"},
+  {e:"rule",a:"قاعدة / يحكم",ex:"Follow the rules of the game.",em:"📏",t:"Society"},
+  {e:"society",a:"مجتمع",ex:"We must all contribute to society.",em:"👨‍👩‍👧",t:"Society"},
+  {e:"victim",a:"ضحية",ex:"The victim reported the crime.",em:"🩹",t:"Society"},
+  {e:"violence",a:"عنف",ex:"Violence is never the answer.",em:"💥",t:"Society"},
+  {e:"violent",a:"عنيف",ex:"The protest turned violent.",em:"💥",t:"Society"},
+  {e:"voluntary",a:"تطوعي",ex:"She does voluntary work at the hospital.",em:"🤲",t:"Society"},
+  {e:"volunteer",a:"متطوع / يتطوع",ex:"He volunteered to help at the event.",em:"🗣️",t:"Society"},
+  // 6. Media & Communication
+  {e:"advertise",a:"يعلن / يروج",ex:"They advertise on social media.",em:"📢",t:"Media"},
+  {e:"advertisement",a:"إعلان",ex:"The advertisement was very creative.",em:"📣",t:"Media"},
+  {e:"advertising",a:"الإعلانات / صناعة الإعلام",ex:"Advertising online is very effective.",em:"📣",t:"Media"},
+  {e:"announce",a:"يعلن / يبلّغ",ex:"The president announced the decision.",em:"📢",t:"Media"},
+  {e:"announcement",a:"إعلان / بيان",ex:"An important announcement was made.",em:"📋",t:"Media"},
+  {e:"appeal",a:"نداء / يستأنف / يجذب",ex:"The advert appeals to young people.",em:"🎯",t:"Media"},
+  {e:"appear",a:"يظهر / يبدو",ex:"He appeared calm during the interview.",em:"👁️",t:"Media"},
+  {e:"appearance",a:"مظهر / ظهور",ex:"First appearance matters.",em:"👁️",t:"Media"},
+  {e:"argue",a:"يجادل / يناقش",ex:"They argued about the results.",em:"💬",t:"Media"},
+  {e:"argument",a:"جدال / حجة",ex:"They had an argument over money.",em:"💬",t:"Media"},
+  {e:"article",a:"مقال / مادة",ex:"She wrote an article for the newspaper.",em:"📰",t:"Media"},
+  {e:"audience",a:"جمهور / متفرجون",ex:"The audience clapped loudly.",em:"👥",t:"Media"},
+  {e:"broadcast",a:"يذيع / يبث",ex:"The match was broadcast live.",em:"📡",t:"Media"},
+  {e:"campaign",a:"حملة",ex:"They launched an anti-smoking campaign.",em:"📣",t:"Media"},
+  {e:"communicate",a:"يتواصل / يبلّغ",ex:"It's important to communicate clearly.",em:"💬",t:"Media"},
+  {e:"compare",a:"يقارن",ex:"Compare the two prices before buying.",em:"📊",t:"Media"},
+  {e:"comparison",a:"مقارنة",ex:"A comparison of both options is needed.",em:"📊",t:"Media"},
+  {e:"complain",a:"يشكو / يتذمر",ex:"She complained about the noise.",em:"😤",t:"Media"},
+  {e:"complaint",a:"شكوى",ex:"He filed a complaint against the company.",em:"😤",t:"Media"},
+  {e:"discuss",a:"يناقش",ex:"Let's discuss the plan first.",em:"💬",t:"Media"},
+  {e:"discussion",a:"نقاش / مناقشة",ex:"The discussion lasted two hours.",em:"💭",t:"Media"},
+  {e:"documentary",a:"وثائقي",ex:"She watched a documentary about nature.",em:"🎬",t:"Media"},
+  {e:"emphasis",a:"تأكيد / تشديد",ex:"He put emphasis on teamwork.",em:"❗",t:"Media"},
+  {e:"emphasize",a:"يؤكد / يشدد",ex:"She emphasized the importance of reading.",em:"❗",t:"Media"},
+  {e:"express",a:"يعبر / يفصح",ex:"She expressed her opinion clearly.",em:"🗣️",t:"Media"},
+  {e:"expression",a:"تعبير / عبارة",ex:"His face showed no expression.",em:"😶",t:"Media"},
+  {e:"feedback",a:"تغذية راجعة / رأي",ex:"The teacher gave useful feedback.",em:"💬",t:"Media"},
+  {e:"headline",a:"عنوان رئيسي",ex:"The headline caught everyone's attention.",em:"📰",t:"Media"},
+  {e:"inform",a:"يبلّغ / يخبر",ex:"Please inform me of any changes.",em:"ℹ️",t:"Media"},
+  {e:"journalist",a:"صحفي",ex:"The journalist reported from the scene.",em:"📸",t:"Media"},
+  {e:"magazine",a:"مجلة",ex:"She reads a fashion magazine.",em:"📖",t:"Media"},
+  {e:"media",a:"وسائل الإعلام",ex:"Social media is very powerful.",em:"📱",t:"Media"},
+  {e:"narrative",a:"سرد / قصة",ex:"The film has a strong narrative.",em:"📖",t:"Media"},
+  {e:"phrase",a:"عبارة / جملة قصيرة",ex:"That's a common English phrase.",em:"💬",t:"Media"},
+  {e:"publish",a:"ينشر / يصدر",ex:"He published his first novel.",em:"📤",t:"Media"},
+  {e:"publication",a:"منشور / نشر",ex:"Her publication was widely read.",em:"📢",t:"Media"},
+  {e:"quote",a:"يقتبس / اقتباس",ex:"She quoted a famous poem.",em:"💬",t:"Media"},
+  {e:"quotation",a:"اقتباس / عرض / سعر",ex:"He used a quotation from Shakespeare.",em:"💬",t:"Media"},
+  {e:"reception",a:"استقبال / حفلة استقبال",ex:"The reception was warm and friendly.",em:"🤝",t:"Media"},
+  {e:"refer",a:"يشير إلى / يرجع",ex:"Please refer to the manual.",em:"↩️",t:"Media"},
+  {e:"reference",a:"مرجع / إشارة",ex:"She included a list of references.",em:"📚",t:"Media"},
+  {e:"respond",a:"يرد / يستجيب",ex:"She responded quickly to the email.",em:"↩️",t:"Media"},
+  {e:"response",a:"رد / استجابة",ex:"His response was surprising.",em:"💬",t:"Media"},
+  {e:"review",a:"مراجعة / يراجع",ex:"The film got a positive review.",em:"⭐",t:"Media"},
+  {e:"signal",a:"إشارة / رمز",ex:"He gave the signal to start.",em:"📶",t:"Media"},
+  {e:"source",a:"مصدر",ex:"Always check your source.",em:"🔗",t:"Media"},
+  {e:"speech",a:"خطاب / كلام",ex:"She gave a speech at the ceremony.",em:"🎤",t:"Media"},
+  {e:"statement",a:"تصريح / بيان",ex:"The minister made a statement.",em:"📋",t:"Media"},
+  // 7. Technology & Science
+  {e:"artificial",a:"اصطناعي",ex:"Artificial intelligence is changing the world.",em:"🤖",t:"Technology"},
+  {e:"calculate",a:"يحسب / يقدر",ex:"Calculate the total cost.",em:"🧮",t:"Technology"},
+  {e:"component",a:"مكوّن / جزء",ex:"Each component must work correctly.",em:"🔩",t:"Technology"},
+  {e:"concept",a:"مفهوم / فكرة",ex:"The concept of gravity is simple.",em:"💡",t:"Technology"},
+  {e:"data",a:"بيانات / معطيات",ex:"Scientists collected a lot of data.",em:"📊",t:"Technology"},
+  {e:"detect",a:"يكتشف / يحدد",ex:"The sensor can detect heat.",em:"🔍",t:"Technology"},
+  {e:"detective",a:"محقق / مقق",ex:"The detective solved the case.",em:"🕵️",t:"Technology"},
+  {e:"device",a:"جهاز / أداة",ex:"She uses a device to track her steps.",em:"📱",t:"Technology"},
+  {e:"digital",a:"رقمي",ex:"We live in a digital age.",em:"💻",t:"Technology"},
+  {e:"discover",a:"يكتشف",ex:"They discovered a new species.",em:"🔭",t:"Technology"},
+  {e:"energy",a:"طاقة",ex:"Solar energy is renewable.",em:"⚡",t:"Technology"},
+  {e:"experiment",a:"تجربة / يجرب",ex:"The experiment produced surprising results.",em:"🧪",t:"Technology"},
+  {e:"explore",a:"يستكشف",ex:"Scientists explore the ocean depths.",em:"🗺️",t:"Technology"},
+  {e:"exploration",a:"استكشاف",ex:"Space exploration is expensive.",em:"🔭",t:"Technology"},
+  {e:"explode",a:"ينفجر",ex:"The gas tank could explode.",em:"💥",t:"Technology"},
+  {e:"explosion",a:"انفجار",ex:"The explosion was heard miles away.",em:"💥",t:"Technology"},
+  {e:"function",a:"وظيفة / يعمل",ex:"The brain controls many body functions.",em:"⚙️",t:"Technology"},
+  {e:"generate",a:"يولد / ينتج",ex:"Wind turbines generate electricity.",em:"⚡",t:"Technology"},
+  {e:"invent",a:"يخترع",ex:"Who invented the telephone?",em:"💡",t:"Technology"},
+  {e:"investigation",a:"تحقيق / بحث",ex:"An investigation was launched.",em:"🔎",t:"Technology"},
+  {e:"logical",a:"منطقي",ex:"His argument was very logical.",em:"🧩",t:"Technology"},
+  {e:"measure",a:"يقيس / مقياس",ex:"Measure the length of the table.",em:"📏",t:"Technology"},
+  {e:"measurement",a:"قياس",ex:"Take accurate measurements.",em:"📏",t:"Technology"},
+  {e:"monitor",a:"شاشة / يراقب",ex:"We monitor patients' blood pressure.",em:"📺",t:"Technology"},
+  {e:"nuclear",a:"نووي",ex:"Nuclear energy is a controversial topic.",em:"☢️",t:"Technology"},
+  {e:"observation",a:"ملاحظة / مراقبة",ex:"Good observation skills are essential.",em:"👁️",t:"Technology"},
+  {e:"observe",a:"يلاحظ / يراقب",ex:"Scientists observed the behaviour of bees.",em:"👁️",t:"Technology"},
+  {e:"process",a:"عملية / يعالج",ex:"What is the manufacturing process?",em:"🔄",t:"Technology"},
+  {e:"produce",a:"ينتج منتجات",ex:"This factory produces 1000 cars daily.",em:"🏭",t:"Technology"},
+  {e:"producer",a:"منتج",ex:"He is a well-known music producer.",em:"🏭",t:"Technology"},
+  {e:"product",a:"منتج",ex:"This product is very popular.",em:"🏭",t:"Technology"},
+  {e:"production",a:"إنتاج",ex:"Car production increased this year.",em:"🏭",t:"Technology"},
+  {e:"proof",a:"دليل / برهان",ex:"There is no proof of his guilt.",em:"✅",t:"Technology"},
+  {e:"researcher",a:"باحث",ex:"The researcher published her findings.",em:"🔭",t:"Technology"},
+  {e:"robot",a:"روبوت / آلة ذكية",ex:"Robots are used in car factories.",em:"🤖",t:"Technology"},
+  {e:"solar",a:"شمسي",ex:"They installed solar panels on the roof.",em:"☀️",t:"Technology"},
+  {e:"structure",a:"هيكل / بنية",ex:"The bridge has a strong structure.",em:"🏗️",t:"Technology"},
+  {e:"substance",a:"مادة / جوهر",ex:"Water is a chemical substance.",em:"🧪",t:"Technology"},
+  {e:"symbol",a:"رمز / علامة",ex:"The dove is a symbol of peace.",em:"🔣",t:"Technology"},
+  {e:"technology",a:"تكنولوجيا / تقنية",ex:"Technology is improving every year.",em:"💻",t:"Technology"},
+  {e:"technique",a:"أسلوب / تقنية",ex:"She learned a new painting technique.",em:"🛠️",t:"Technology"},
+  {e:"technical",a:"تقني / فني",ex:"The manual is very technical.",em:"⚙️",t:"Technology"},
+  {e:"transform",a:"يحول / يغير",ex:"Technology has transformed our lives.",em:"🔄",t:"Technology"},
+  {e:"virtual",a:"افتراضي",ex:"He attended a virtual meeting.",em:"🖥️",t:"Technology"},
+  // 8. Finance & Economy
+  {e:"afford",a:"يستطيع الشراء / تحمّل تكلفة",ex:"I can't afford a new car.",em:"💸",t:"Finance"},
+  {e:"bank",a:"بنك / ضفة نهر",ex:"She opened an account at the bank.",em:"🏦",t:"Finance"},
+  {e:"bill",a:"فاتورة / ورقة نقدية",ex:"He paid the electricity bill.",em:"🧾",t:"Finance"},
+  {e:"borrow",a:"يستعير / يقترض",ex:"He borrowed money from the bank.",em:"🤲",t:"Finance"},
+  {e:"cent",a:"سنت (عملة)",ex:"A dollar has 100 cents.",em:"💲",t:"Finance"},
+  {e:"charge",a:"رسوم / يتقاضى / يشحن",ex:"They charged extra for delivery.",em:"💳",t:"Finance"},
+  {e:"cheap",a:"رخيص",ex:"The market sells cheap vegetables.",em:"🏷️",t:"Finance"},
+  {e:"commercial",a:"تجاري / إعلان",ex:"The area is mainly commercial.",em:"📺",t:"Finance"},
+  {e:"consumer",a:"مستهلك",ex:"Consumers demand better products.",em:"🛍️",t:"Finance"},
+  {e:"consume",a:"يستهلك",ex:"We consume too much energy.",em:"🛒",t:"Finance"},
+  {e:"cost",a:"تكلفة / يكلّف",ex:"The cost of living has risen.",em:"💲",t:"Finance"},
+  {e:"currency",a:"عملة",ex:"The local currency is the pound.",em:"💱",t:"Finance"},
+  {e:"debt",a:"دين / مديونية",ex:"He is in serious debt.",em:"💳",t:"Finance"},
+  {e:"decade",a:"عقد / عشر سنوات",ex:"The economy grew over the past decade.",em:"📅",t:"Finance"},
+  {e:"decline",a:"يتراجع / رفض / تدهور",ex:"Sales declined last quarter.",em:"📉",t:"Finance"},
+  {e:"decrease",a:"يتناقص / انخفاض",ex:"There was a decrease in sales.",em:"📉",t:"Finance"},
+  {e:"distribute",a:"يوزع",ex:"The aid was distributed to refugees.",em:"🚚",t:"Finance"},
+  {e:"distribution",a:"توزيع",ex:"Distribution of goods was delayed.",em:"🚚",t:"Finance"},
+  {e:"economic",a:"اقتصادي",ex:"The country faces economic challenges.",em:"📊",t:"Finance"},
+  {e:"economy",a:"اقتصاد",ex:"The global economy is unstable.",em:"🌐",t:"Finance"},
+  {e:"estate",a:"عقار / ممتلكات",ex:"She invested in real estate.",em:"🏘️",t:"Finance"},
+  {e:"estimate",a:"يقدر / تقدير",ex:"They estimate the cost at $5000.",em:"🔢",t:"Finance"},
+  {e:"expense",a:"نفقة / مصروف",ex:"Travel expenses can be high.",em:"💸",t:"Finance"},
+  {e:"financial",a:"مالي",ex:"She needs financial advice.",em:"💹",t:"Finance"},
+  {e:"finance",a:"تمويل / مالية",ex:"She works in finance.",em:"💵",t:"Finance"},
+  {e:"funding",a:"تمويل",ex:"The project needs more funding.",em:"🏦",t:"Finance"},
+  {e:"gain",a:"يكسب / ربح",ex:"He gained a lot from the investment.",em:"📈",t:"Finance"},
+  {e:"grant",a:"منحة / يمنح",ex:"She received a grant for her studies.",em:"🎁",t:"Finance"},
+  {e:"investment",a:"استثمار",ex:"Real estate is a good investment.",em:"📈",t:"Finance"},
+  {e:"loan",a:"قرض",ex:"She took a bank loan.",em:"💰",t:"Finance"},
+  {e:"luxury",a:"رفاهية",ex:"A sports car is a luxury.",em:"💎",t:"Finance"},
+  {e:"percentage",a:"نسبة مئوية",ex:"What percentage scored above 90?",em:"📊",t:"Finance"},
+  {e:"per cent",a:"بالمئة",ex:"Prices rose by 5 per cent.",em:"📈",t:"Finance"},
+  {e:"price",a:"سعر",ex:"The price of oil has increased.",em:"🏷️",t:"Finance"},
+  {e:"property",a:"ملكية / عقار",ex:"He owns property in the city.",em:"🏠",t:"Finance"},
+  {e:"purchase",a:"يشتري / مشتريات",ex:"She purchased a new laptop.",em:"🛍️",t:"Finance"},
+  {e:"rate",a:"معدل / سعر",ex:"Interest rates are high this year.",em:"📉",t:"Finance"},
+  {e:"reduce",a:"يخفض / يقلل",ex:"We must reduce spending.",em:"⬇️",t:"Finance"},
+  {e:"reduction",a:"تخفيض / انخفاض",ex:"There was a 10% reduction in price.",em:"⬇️",t:"Finance"},
+  {e:"rent",a:"إيجار / يستأجر",ex:"The rent for this flat is affordable.",em:"🏠",t:"Finance"},
+  {e:"revenue",a:"إيراد / دخل",ex:"The company's revenue grew by 20%.",em:"💹",t:"Finance"},
+  {e:"rich",a:"غني / ثري",ex:"She is very rich.",em:"🤑",t:"Finance"},
+  {e:"tax",a:"ضريبة",ex:"We pay tax on our income.",em:"🧾",t:"Finance"},
+  {e:"trade",a:"تجارة / يتاجر",ex:"Trade between countries is important.",em:"🤝",t:"Finance"},
+  {e:"wealth",a:"ثروة",ex:"Sharing wealth helps reduce poverty.",em:"💎",t:"Finance"},
+  {e:"wealthy",a:"ثري / غني",ex:"She comes from a wealthy family.",em:"🤑",t:"Finance"},
+  // 9. Health & Body
+  {e:"bone",a:"عظمة",ex:"She broke a bone in her foot.",em:"🦴",t:"Health"},
+  {e:"brain",a:"دماغ / عقل",ex:"Exercise is good for the brain.",em:"🫀",t:"Health"},
+  {e:"breathe",a:"يتنفس",ex:"Breathe deeply and relax.",em:"🫁",t:"Health"},
+  {e:"cure",a:"علاج / يشفي",ex:"There is no cure for this disease yet.",em:"💊",t:"Health"},
+  {e:"dentist",a:"طبيب أسنان",ex:"She visited the dentist last week.",em:"🦷",t:"Health"},
+  {e:"diet",a:"نظام غذائي / حمية",ex:"A healthy diet includes vegetables.",em:"🥗",t:"Health"},
+  {e:"disease",a:"مرض",ex:"The disease spread quickly.",em:"🦠",t:"Health"},
+  {e:"drug",a:"دواء / مخدر",ex:"The doctor prescribed a new drug.",em:"💊",t:"Health"},
+  {e:"exercise",a:"تمرين / يمارس الرياضة",ex:"Exercise every day for better health.",em:"🏋️",t:"Health"},
+  {e:"heal",a:"يشفي / يعالج",ex:"The wound took a week to heal.",em:"🩹",t:"Health"},
+  {e:"health",a:"صحة",ex:"Good food is important for health.",em:"❤️",t:"Health"},
+  {e:"illness",a:"مرض / سقم",ex:"She missed school due to illness.",em:"🤒",t:"Health"},
+  {e:"infection",a:"عدوى / التهاب",ex:"The infection spread to other patients.",em:"🦠",t:"Health"},
+  {e:"injure",a:"يصاب / يجرح",ex:"He injured his knee during the match.",em:"🤕",t:"Health"},
+  {e:"injured",a:"مصاب / جريح",ex:"Three people were injured in the accident.",em:"🤕",t:"Health"},
+  {e:"injury",a:"إصابة / جرح",ex:"He suffered a knee injury.",em:"🩼",t:"Health"},
+  {e:"medicine",a:"دواء / طب",ex:"Take this medicine twice a day.",em:"🍶",t:"Health"},
+  {e:"mental",a:"عقلي / نفسي",ex:"Mental health is as important as physical.",em:"🧠",t:"Health"},
+  {e:"nurse",a:"ممرضة / ممرض",ex:"The nurse took his temperature.",em:"👩‍⚕️",t:"Health"},
+  {e:"pain",a:"ألم / وجع",ex:"She felt a sharp pain in her chest.",em:"😣",t:"Health"},
+  {e:"painful",a:"مؤلم",ex:"The injection was quite painful.",em:"😖",t:"Health"},
+  {e:"pharmacy",a:"صيدلية",ex:"He bought vitamins from the pharmacy.",em:"💊",t:"Health"},
+  {e:"physical",a:"جسدي / مادي",ex:"Physical activity improves mood.",em:"💪",t:"Health"},
+  {e:"poison",a:"سم / يسمم",ex:"Some mushrooms contain poison.",em:"☠️",t:"Health"},
+  {e:"poisonous",a:"سام / ضار",ex:"Some plants are poisonous.",em:"☠️",t:"Health"},
+  {e:"psychologist",a:"عالم نفس / طبيب نفسي",ex:"She sees a psychologist weekly.",em:"🧠",t:"Health"},
+  {e:"recover",a:"يتعافى / يسترجع",ex:"It took him a month to recover.",em:"😊",t:"Health"},
+  {e:"stress",a:"ضغط / توتر",ex:"Too much stress affects health.",em:"😰",t:"Health"},
+  {e:"surgery",a:"جراحة / عملية",ex:"He had surgery on his knee.",em:"🏥",t:"Health"},
+  {e:"symptom",a:"أعراض / علامة المرض",ex:"Fever is a symptom of flu.",em:"🌡️",t:"Health"},
+  {e:"therapy",a:"علاج / جلسة علاجية",ex:"She went to therapy after the accident.",em:"🛋️",t:"Health"},
+  {e:"treatment",a:"علاج / معاملة",ex:"The treatment lasted three months.",em:"💉",t:"Health"},
+  {e:"unconscious",a:"فاقد الوعي / غير واعٍ",ex:"He was unconscious for an hour.",em:"😵",t:"Health"},
+  {e:"weakness",a:"ضعف",ex:"Tiredness can be a sign of weakness.",em:"😓",t:"Health"},
+  // 10. Environment & Nature
+  {e:"atmosphere",a:"غلاف جوي / جو",ex:"Pollution damages the atmosphere.",em:"🌫️",t:"Environment"},
+  {e:"bush",a:"شجيرة / أدغال",ex:"A bird hid in the bush.",em:"🌿",t:"Environment"},
+  {e:"climate",a:"مناخ",ex:"Climate change is a global challenge.",em:"🌡️",t:"Environment"},
+  {e:"creature",a:"مخلوق / كائن حي",ex:"The ocean is home to amazing creatures.",em:"🐾",t:"Environment"},
+  {e:"cycle",a:"دورة / دراجة",ex:"The water cycle is essential for life.",em:"🔄",t:"Environment"},
+  {e:"desert",a:"صحراء",ex:"The Sahara is the world's largest desert.",em:"🏜️",t:"Environment"},
+  {e:"dirt",a:"وسخ / تراب",ex:"The soil was full of dirt.",em:"🌱",t:"Environment"},
+  {e:"drought",a:"جفاف",ex:"The drought destroyed the harvest.",em:"☀️",t:"Environment"},
+  {e:"dust",a:"غبار / يُغبّر",ex:"Dust covered the furniture.",em:"💨",t:"Environment"},
+  {e:"earthquake",a:"زلزال",ex:"The earthquake damaged many buildings.",em:"🌊",t:"Environment"},
+  {e:"environment",a:"بيئة / محيط",ex:"We must protect the environment.",em:"🌍",t:"Environment"},
+  {e:"environmental",a:"بيئي",ex:"Environmental damage is serious.",em:"🌍",t:"Environment"},
+  {e:"flood",a:"فيضان / يغمر",ex:"The flood destroyed the village.",em:"🌊",t:"Environment"},
+  {e:"forest",a:"غابة",ex:"The Amazon forest is shrinking.",em:"🌲",t:"Environment"},
+  {e:"fossil",a:"حفرية / متحجر",ex:"Scientists found a fossil of a dinosaur.",em:"🦕",t:"Environment"},
+  {e:"global",a:"عالمي / شامل",ex:"Global temperatures are rising.",em:"🌐",t:"Environment"},
+  {e:"growth",a:"نمو / تطور",ex:"Plant growth depends on sunlight.",em:"📈",t:"Environment"},
+  {e:"harvest",a:"حصاد / يحصد",ex:"The harvest this year was excellent.",em:"🌾",t:"Environment"},
+  {e:"hurricane",a:"إعصار / عاصفة مدارية",ex:"The hurricane caused major damage.",em:"🌀",t:"Environment"},
+  {e:"insect",a:"حشرة",ex:"Bees are useful insects.",em:"🐛",t:"Environment"},
+  {e:"lake",a:"بحيرة",ex:"They went fishing at the lake.",em:"🏞️",t:"Environment"},
+  {e:"landscape",a:"منظر طبيعي / تضاريس",ex:"Scotland has a beautiful landscape.",em:"🗺️",t:"Environment"},
+  {e:"leaf",a:"ورقة شجر",ex:"A leaf fell from the tree.",em:"🍃",t:"Environment"},
+  {e:"melt",a:"يذوب / يذيب",ex:"The ice melted in the sun.",em:"🫠",t:"Environment"},
+  {e:"mineral",a:"معدن / معدني",ex:"Iron is an important mineral.",em:"⛏️",t:"Environment"},
+  {e:"mountain",a:"جبل",ex:"They climbed the mountain in winter.",em:"⛰️",t:"Environment"},
+  {e:"natural",a:"طبيعي",ex:"Honey is a natural sweetener.",em:"🍃",t:"Environment"},
+  {e:"nature",a:"الطبيعة",ex:"She loves spending time in nature.",em:"🌳",t:"Environment"},
+  {e:"ocean",a:"محيط",ex:"The Pacific is the world's largest ocean.",em:"🌊",t:"Environment"},
+  {e:"planet",a:"كوكب",ex:"Earth is the only planet we know with life.",em:"🪐",t:"Environment"},
+  {e:"pollution",a:"تلوث",ex:"Air pollution is a major health risk.",em:"🏭",t:"Environment"},
+  {e:"protect",a:"يحمي",ex:"We should protect endangered species.",em:"🛡️",t:"Environment"},
+  {e:"river",a:"نهر",ex:"The Nile is the longest river in the world.",em:"🏞️",t:"Environment"},
+  {e:"rural",a:"ريفي",ex:"He grew up in a rural area.",em:"🌾",t:"Environment"},
+  {e:"soil",a:"تربة / طيني",ex:"Rich soil produces healthy crops.",em:"🌱",t:"Environment"},
+  {e:"species",a:"نوع / فصيلة",ex:"Many species are endangered.",em:"🦁",t:"Environment"},
+  {e:"storm",a:"عاصفة",ex:"A storm is coming tonight.",em:"⛈️",t:"Environment"},
+  {e:"survive",a:"ينجو / يعيش",ex:"How did they survive in the desert?",em:"🏃",t:"Environment"},
+  {e:"tropical",a:"استوائي",ex:"The tropical rainforest is rich in wildlife.",em:"🌴",t:"Environment"},
+  {e:"valley",a:"وادٍ",ex:"The village lies in a green valley.",em:"🏔️",t:"Environment"},
+  {e:"wave",a:"موجة / يلوح",ex:"The waves crashed against the rocks.",em:"🌊",t:"Environment"},
+  {e:"waste",a:"نفايات / يضيع",ex:"Don't waste water.",em:"🗑️",t:"Environment"},
+  {e:"wet",a:"مبلول / رطب",ex:"The grass was wet after the rain.",em:"💧",t:"Environment"},
+  {e:"wildlife",a:"حياة برية",ex:"The national park protects local wildlife.",em:"🦊",t:"Environment"},
+  // 11. Travel & Places
+  {e:"abroad",a:"في الخارج / خارج البلاد",ex:"She studied abroad for a year.",em:"🌍",t:"Travel"},
+  {e:"accommodation",a:"سكن / إقامة",ex:"The hotel accommodation was excellent.",em:"🏨",t:"Travel"},
+  {e:"ancient",a:"قديم / عريق",ex:"They visited an ancient temple.",em:"🏺",t:"Travel"},
+  {e:"arrival",a:"وصول",ex:"His arrival was unexpected.",em:"🛬",t:"Travel"},
+  {e:"attraction",a:"جاذبية / معلم سياحي",ex:"Big Ben is a major tourist attraction.",em:"🗺️",t:"Travel"},
+  {e:"border",a:"حدود / حافة",ex:"They crossed the border at midnight.",em:"🚩",t:"Travel"},
+  {e:"castle",a:"قلعة / حصن",ex:"The castle is 500 years old.",em:"🏰",t:"Travel"},
+  {e:"cottage",a:"بيت ريفي / كوخ صغير",ex:"They rented a cottage by the sea.",em:"🏡",t:"Travel"},
+  {e:"destination",a:"وجهة / مقصد",ex:"Dubai is a popular tourist destination.",em:"📍",t:"Travel"},
+  {e:"direction",a:"اتجاه / توجيه",ex:"Can you give me directions?",em:"🧭",t:"Travel"},
+  {e:"distance",a:"مسافة / بُعد",ex:"The distance between Cairo and Alex is 220km.",em:"📏",t:"Travel"},
+  {e:"east",a:"شرق",ex:"The sun rises in the east.",em:"🌅",t:"Travel"},
+  {e:"eastern",a:"شرقي",ex:"She travelled to eastern Asia.",em:"🌅",t:"Travel"},
+  {e:"entrance",a:"مدخل",ex:"Use the main entrance.",em:"🚪",t:"Travel"},
+  {e:"expedition",a:"رحلة استكشافية",ex:"They joined an expedition to the poles.",em:"🧭",t:"Travel"},
+  {e:"foreign",a:"أجنبي",ex:"She speaks two foreign languages.",em:"🌏",t:"Travel"},
+  {e:"journey",a:"رحلة / سفر",ex:"The journey took six hours.",em:"🚂",t:"Travel"},
+  {e:"locate",a:"يحدد موقع / يجد",ex:"Can you locate it on the map?",em:"📍",t:"Travel"},
+  {e:"located",a:"يقع / موجود",ex:"The hotel is located near the airport.",em:"📍",t:"Travel"},
+  {e:"luggage",a:"حقائب سفر / أمتعة",ex:"She packed her luggage the night before.",em:"🧳",t:"Travel"},
+  {e:"map",a:"خريطة",ex:"He studied the map carefully.",em:"🗺️",t:"Travel"},
+  {e:"palace",a:"قصر",ex:"The palace was open to visitors.",em:"🏯",t:"Travel"},
+  {e:"passenger",a:"راكب",ex:"All passengers must board by 10am.",em:"🧑‍✈️",t:"Travel"},
+  {e:"region",a:"منطقة / إقليم",ex:"This region is known for its olive oil.",em:"🗺️",t:"Travel"},
+  {e:"regional",a:"إقليمي",ex:"He won the regional championship.",em:"🗺️",t:"Travel"},
+  {e:"reservation",a:"حجز / تحفظ",ex:"Do you have a reservation?",em:"📅",t:"Travel"},
+  {e:"resort",a:"منتجع / يلجأ إلى",ex:"They stayed at a beach resort.",em:"🏖️",t:"Travel"},
+  {e:"route",a:"طريق / مسار",ex:"The route through the mountains is scenic.",em:"🛣️",t:"Travel"},
+  {e:"sail",a:"يبحر / شراع / بحر",ex:"They sailed around the island.",em:"⛵",t:"Travel"},
+  {e:"sailing",a:"الإبحار / قيادة القوارب",ex:"Sailing is her favourite sport.",em:"⛵",t:"Travel"},
+  {e:"sailor",a:"بحار",ex:"The sailor guided the boat safely.",em:"⛵",t:"Travel"},
+  {e:"scenery",a:"مشهد طبيعي / مناظر",ex:"The scenery was absolutely stunning.",em:"🌅",t:"Travel"},
+  {e:"schedule",a:"جدول / برنامج",ex:"The flight schedule was delayed.",em:"📅",t:"Travel"},
+  {e:"tour",a:"جولة / يتجول",ex:"They went on a city tour.",em:"🗺️",t:"Travel"},
+  {e:"tourism",a:"سياحة",ex:"Tourism is vital for the economy.",em:"📸",t:"Travel"},
+  {e:"transport",a:"نقل / مواصلات",ex:"Public transport is cheap here.",em:"🚌",t:"Travel"},
+  {e:"tunnel",a:"نفق",ex:"The train went through a long tunnel.",em:"🚇",t:"Travel"},
+  {e:"urban",a:"حضري",ex:"Urban areas are more polluted.",em:"🌆",t:"Travel"},
+  {e:"vacation",a:"إجازة / عطلة",ex:"They went on vacation to Greece.",em:"🏖️",t:"Travel"},
+  {e:"venue",a:"مكان / قاعة",ex:"The wedding venue was beautiful.",em:"📍",t:"Travel"},
+  {e:"village",a:"قرية",ex:"She grew up in a small village.",em:"🏘️",t:"Travel"},
+  {e:"voyage",a:"رحلة بحرية / سفر طويل",ex:"The voyage lasted three weeks.",em:"⛵",t:"Travel"},
+  {e:"worldwide",a:"في جميع أنحاء العالم",ex:"The product is sold worldwide.",em:"🌍",t:"Travel"},
+  // 12. Art & Entertainment
+  {e:"anniversary",a:"ذكرى سنوية",ex:"Happy 10th wedding anniversary!",em:"🎂",t:"Art"},
+  {e:"architecture",a:"هندسة معمارية",ex:"The city is known for its architecture.",em:"🏛️",t:"Art"},
+  {e:"art",a:"فن",ex:"She loves modern art.",em:"🖼️",t:"Art"},
+  {e:"artist",a:"فنان",ex:"He is a famous artist.",em:"🎨",t:"Art"},
+  {e:"artistic",a:"فني / إبداعي",ex:"She has an artistic personality.",em:"✨",t:"Art"},
+  {e:"author",a:"مؤلف / كاتب",ex:"Who is the author of this book?",em:"✍️",t:"Art"},
+  {e:"band",a:"فرقة موسيقية / شريط",ex:"The band played for three hours.",em:"🎸",t:"Art"},
+  {e:"cast",a:"طاقم تمثيل / يرمي",ex:"The cast of the film was impressive.",em:"🎭",t:"Art"},
+  {e:"celebrate",a:"يحتفل",ex:"They celebrated the victory.",em:"🎊",t:"Art"},
+  {e:"celebration",a:"احتفال",ex:"The celebration lasted all night.",em:"🎉",t:"Art"},
+  {e:"celebrity",a:"مشهور / نجم",ex:"She is a famous celebrity.",em:"⭐",t:"Art"},
+  {e:"ceremony",a:"حفل / مراسم",ex:"The opening ceremony was spectacular.",em:"🎗️",t:"Art"},
+  {e:"costume",a:"زي / ملابس تنكرية",ex:"She wore a traditional costume.",em:"👘",t:"Art"},
+  {e:"creation",a:"إبداع / خلق",ex:"The painting is a beautiful creation.",em:"🎨",t:"Art"},
+  {e:"entertainment",a:"ترفيه",ex:"TV is a form of entertainment.",em:"🎬",t:"Art"},
+  {e:"entertain",a:"يرفّه / يستضيف",ex:"The show entertained the whole family.",em:"🎬",t:"Art"},
+  {e:"exhibition",a:"معرض / عرض",ex:"She visited an art exhibition.",em:"🖼️",t:"Art"},
+  {e:"fashion",a:"موضة / أزياء",ex:"Fashion changes every season.",em:"👗",t:"Art"},
+  {e:"fashionable",a:"عصري / أنيق",ex:"She always looks fashionable.",em:"💅",t:"Art"},
+  {e:"festival",a:"مهرجان",ex:"The music festival attracts thousands.",em:"🎪",t:"Art"},
+  {e:"fiction",a:"خيال / قصص خيالية",ex:"He prefers science fiction novels.",em:"📚",t:"Art"},
+  {e:"folk",a:"شعبي / تقليدي",ex:"They played folk music.",em:"🎻",t:"Art"},
+  {e:"gallery",a:"معرض / صالة",ex:"We visited the national art gallery.",em:"🖼️",t:"Art"},
+  {e:"genre",a:"نوع / فصيلة أدبية",ex:"What genre of music do you prefer?",em:"🎵",t:"Art"},
+  {e:"historic",a:"تاريخي / مهم",ex:"Visiting Rome is a historic experience.",em:"📜",t:"Art"},
+  {e:"hobby",a:"هواية",ex:"Her hobby is painting.",em:"🎭",t:"Art"},
+  {e:"imagination",a:"خيال / قدرة إبداعية",ex:"Children have a vivid imagination.",em:"💭",t:"Art"},
+  {e:"imaginary",a:"خيالي / وهمي",ex:"The character is imaginary.",em:"🌠",t:"Art"},
+  {e:"musical",a:"موسيقي / عرض موسيقي",ex:"She is very musical.",em:"🎶",t:"Art"},
+  {e:"painting",a:"لوحة فنية / رسم",ex:"She bought a beautiful painting.",em:"🖌️",t:"Art"},
+  {e:"painter",a:"رسام",ex:"He is a talented painter.",em:"🖌️",t:"Art"},
+  {e:"performance",a:"أداء / عرض",ex:"The performance was outstanding.",em:"🎭",t:"Art"},
+  {e:"poem",a:"قصيدة",ex:"He wrote a poem for her.",em:"📜",t:"Art"},
+  {e:"poetry",a:"شعر / قصائد",ex:"She loves reading poetry.",em:"🖊️",t:"Art"},
+  {e:"portrait",a:"بورتريه / صورة شخصية",ex:"The artist painted her portrait.",em:"🖼️",t:"Art"},
+  {e:"sculpture",a:"نحت / منحوتة",ex:"The sculpture was made of marble.",em:"🗿",t:"Art"},
+  {e:"tale",a:"حكاية / قصة",ex:"She told a fairy tale to the children.",em:"📖",t:"Art"},
+  {e:"theatre",a:"مسرح",ex:"They went to the theatre on Friday.",em:"🎭",t:"Art"},
+  {e:"tradition",a:"تقليد / عرف",ex:"This tradition dates back hundreds of years.",em:"🎎",t:"Art"},
+  // 13. Personal Development
+  {e:"abandon",a:"يتخلى عن / يهجر",ex:"Don't abandon your dreams.",em:"🚪",t:"Development"},
+  {e:"ability",a:"قدرة / مهارة",ex:"She has the ability to lead.",em:"💪",t:"Development"},
+  {e:"adapt",a:"يتكيف / يعدل",ex:"She adapted quickly to her new school.",em:"🦎",t:"Development"},
+  {e:"ambition",a:"طموح",ex:"His ambition is to become a doctor.",em:"🚀",t:"Development"},
+  {e:"approach",a:"نهج / يقترب / يتعامل",ex:"Try a different approach to the problem.",em:"🛤️",t:"Development"},
+  {e:"belief",a:"معتقد / إيمان",ex:"He has a strong belief in fairness.",em:"🙏",t:"Development"},
+  {e:"challenge",a:"تحدٍ / يتحدى",ex:"Every challenge is a learning opportunity.",em:"🧗",t:"Development"},
+  {e:"character",a:"شخصية / طابع",ex:"She has a kind and generous character.",em:"🦸",t:"Development"},
+  {e:"choice",a:"اختيار / قرار",ex:"Make wise choices in life.",em:"🔀",t:"Development"},
+  {e:"confidence",a:"ثقة بالنفس",ex:"She spoke with great confidence.",em:"💪",t:"Development"},
+  {e:"consistent",a:"ثابت / منتظم",ex:"Be consistent in your efforts.",em:"🔁",t:"Development"},
+  {e:"creative",a:"مبدع / مبتكر",ex:"Think in a creative way.",em:"🎨",t:"Development"},
+  {e:"decision",a:"قرار",ex:"It was a difficult decision to make.",em:"⚖️",t:"Development"},
+  {e:"deliberate",a:"متعمد / يتعمد",ex:"Practice deliberate learning daily.",em:"🎯",t:"Development"},
+  {e:"determined",a:"مصمم / عازم",ex:"She was determined to pass the exam.",em:"🔥",t:"Development"},
+  {e:"develop",a:"يطور / ينمي",ex:"He developed new leadership skills.",em:"📈",t:"Development"},
+  {e:"development",a:"تطور / تنمية",ex:"Personal development takes time.",em:"📈",t:"Development"},
+  {e:"dream",a:"حلم / يحلم",ex:"Never stop chasing your dreams.",em:"💭",t:"Development"},
+  {e:"effort",a:"جهد / مجهود",ex:"Success requires a lot of effort.",em:"⚡",t:"Development"},
+  {e:"encourage",a:"يشجع",ex:"The teacher encouraged the students.",em:"👏",t:"Development"},
+  {e:"fail",a:"يفشل",ex:"Don't be afraid to fail and try again.",em:"❌",t:"Development"},
+  {e:"failure",a:"فشل",ex:"Failure is a step towards success.",em:"📉",t:"Development"},
+  {e:"faith",a:"إيمان / ثقة",ex:"She has faith in her team.",em:"🕊️",t:"Development"},
+  {e:"focus",a:"يركز / تركيز",ex:"Focus on what you can control.",em:"🎯",t:"Development"},
+  {e:"goal",a:"هدف",ex:"Set clear goals for yourself.",em:"🥅",t:"Development"},
+  {e:"grow",a:"ينمو / يتطور",ex:"We grow through our experiences.",em:"🌱",t:"Development"},
+  {e:"habit",a:"عادة",ex:"Reading is a good habit.",em:"🔁",t:"Development"},
+  {e:"identify",a:"يتعرف / يحدد",ex:"Identify your strengths and weaknesses.",em:"🔍",t:"Development"},
+  {e:"identity",a:"هوية / شخصية",ex:"She struggled with her identity.",em:"🆔",t:"Development"},
+  {e:"improve",a:"يتحسن / يحسن",ex:"She improved her score with practice.",em:"📈",t:"Development"},
+  {e:"independence",a:"استقلالية",ex:"He values his independence.",em:"🦅",t:"Development"},
+  {e:"inspire",a:"يلهم / يحفز",ex:"Great teachers inspire students.",em:"💡",t:"Development"},
+  {e:"intention",a:"نية / قصد",ex:"Her intention was to help.",em:"🎯",t:"Development"},
+  {e:"limit",a:"يحدد حد / Push beyond your limits.",ex:"Push beyond your limits.",em:"🚧",t:"Development"},
+  {e:"manage",a:"يدير / يتمكن",ex:"Can you manage without help?",em:"🎛️",t:"Development"},
+  {e:"motivate",a:"يشجع / يحفز",ex:"What motivates you to study?",em:"🔋",t:"Development"},
+  {e:"overcome",a:"يتغلب على",ex:"She overcame many obstacles.",em:"🧗",t:"Development"},
+  {e:"patience",a:"صبر",ex:"Patience is a great virtue.",em:"⏳",t:"Development"},
+  {e:"potential",a:"إمكانات / كامن",ex:"Every child has great potential.",em:"🌟",t:"Development"},
+  {e:"prepare",a:"يستعد / يعد",ex:"Always prepare before an exam.",em:"📋",t:"Development"},
+  {e:"prepared",a:"مستعد / جاهز",ex:"Are you prepared for the exam?",em:"📋",t:"Development"},
+  {e:"priority",a:"أولوية",ex:"Family is her top priority.",em:"📌",t:"Development"},
+  {e:"progress",a:"تقدم / يتقدم",ex:"She has made great progress this year.",em:"🚀",t:"Development"},
+  {e:"pursue",a:"يسعى / يتابع",ex:"Pursue your passion.",em:"🏃",t:"Development"},
+  {e:"reflect",a:"يعكس / يتأمل",ex:"Reflect on your mistakes and learn.",em:"🪞",t:"Development"},
+  {e:"resolve",a:"تصميم / عزم / يحل",ex:"She resolved to study every day.",em:"💪",t:"Development"},
+  {e:"strength",a:"قوة / نقطة قوة",ex:"Her strength is her creativity.",em:"💪",t:"Development"},
+  {e:"succeed",a:"ينجح",ex:"Hard work helps you succeed.",em:"🏆",t:"Development"},
+  {e:"success",a:"نجاح",ex:"Success comes with patience.",em:"⭐",t:"Development"},
+  {e:"value",a:"يقدّر / قيمة",ex:"He values honesty above everything.",em:"💎",t:"Development"},
+  {e:"wisdom",a:"حكمة",ex:"Experience brings wisdom.",em:"🦉",t:"Development"},
+  // General Vocabulary A-Z (selected key words)
+  {e:"above",a:"فوق / من أعلى",ex:"The temperature rose above 40 degrees.",em:"⬆️",t:"General"},
+  {e:"accompany",a:"يرافق / يصحب",ex:"He accompanied her to the hospital.",em:"👪",t:"General"},
+  {e:"according to",a:"وفقًا لـ / حسب",ex:"According to the report, sales increased.",em:"🎯",t:"General"},
+  {e:"accurate",a:"دقيق / صحيح",ex:"The forecast was accurate.",em:"🎯",t:"General"},
+  {e:"acquire",a:"يكتسب / حصل على",ex:"He acquired new skills online.",em:"🏃",t:"General"},
+  {e:"action",a:"فعل / إجراء",ex:"The government took action.",em:"🎭",t:"General"},
+  {e:"actual",a:"فعلي / حقيقي",ex:"The actual cost was higher than expected.",em:"✅",t:"General"},
+  {e:"additional",a:"إضافي",ex:"She asked for additional time.",em:"➕",t:"General"},
+  {e:"admit",a:"يعترف / يقبل",ex:"He admitted making a mistake.",em:"✅",t:"General"},
+  {e:"adopt",a:"يتبنى / يعتمد",ex:"They adopted a new strategy.",em:"👶",t:"General"},
+  {e:"advantage",a:"مزية / فائدة",ex:"What are the advantages of this plan?",em:"🌟",t:"General"},
+  {e:"aggressive",a:"عدواني / قوي",ex:"He has an aggressive personality.",em:"😤",t:"General"},
+  {e:"aid",a:"مساعدة / يُعين",ex:"First aid is very important.",em:"🤝",t:"General"},
+  {e:"alter",a:"يغير / يعدّل",ex:"She altered her dress.",em:"🔄",t:"General"},
+  {e:"alternative",a:"بديل / خيار آخر",ex:"Is there an alternative solution?",em:"🔄",t:"General"},
+  {e:"among",a:"بين (عدة أشياء)",ex:"She was among the top students.",em:"👥",t:"General"},
+  {e:"annual",a:"سنوي",ex:"The annual report was published.",em:"📅",t:"General"},
+  {e:"apparent",a:"واضح / ظاهر",ex:"It was apparent that she was upset.",em:"👁️",t:"General"},
+  {e:"apparently",a:"على ما يبدو",ex:"Apparently, he left early.",em:"👁️",t:"General"},
+  {e:"appreciate",a:"يقدّر / يتذوق",ex:"I really appreciate your help.",em:"👍",t:"General"},
+  {e:"appropriate",a:"مناسب / لائق",ex:"That wasn't appropriate behaviour.",em:"✅",t:"General"},
+  {e:"approval",a:"موافقة / قبول",ex:"She got her manager's approval.",em:"👍",t:"General"},
+  {e:"approve",a:"يوافق على",ex:"The board approved the plan.",em:"✅",t:"General"},
+  {e:"approximately",a:"تقريبًا",ex:"The journey takes approximately 2 hours.",em:"🔢",t:"General"},
+  {e:"arise",a:"ينشأ / يظهر",ex:"Problems may arise during the project.",em:"⚔️",t:"General"},
+  {e:"arrange",a:"يرتب / ينظم",ex:"She arranged the meeting for Monday.",em:"📋",t:"General"},
+  {e:"aspect",a:"جانب / ناحية",ex:"Consider every aspect of the problem.",em:"🏃",t:"General"},
+  {e:"assume",a:"يفترض / أخذ على عاتقه",ex:"Don't assume without evidence.",em:"🧠",t:"General"},
+  {e:"athlete",a:"رياضي / لاعب",ex:"She is a professional athlete.",em:"🎯",t:"General"},
+  {e:"attempt",a:"يحاول / محاولة",ex:"He made another attempt to solve it.",em:"🎯",t:"General"},
+  {e:"attention",a:"انتباه / اهتمام",ex:"Pay attention in class.",em:"👁️",t:"General"},
+  {e:"attract",a:"يجذب / يستقطب",ex:"The museum attracts many tourists.",em:"🧲",t:"General"},
+  {e:"average",a:"متوسط / عادي",ex:"Her grades are above average.",em:"📊",t:"General"},
+  {e:"avoid",a:"يتجنب",ex:"Avoid eating too much sugar.",em:"🚫",t:"General"},
+  {e:"awful",a:"فظيع / سيئ جدًا",ex:"The weather was awful today.",em:"😖",t:"General"},
+  {e:"barrier",a:"حاجز / عائق",ex:"Language can be a barrier.",em:"🚧",t:"General"},
+  {e:"behaviour",a:"سلوك / تصرف",ex:"His behaviour was unacceptable.",em:"🧍",t:"General"},
+  {e:"benefit",a:"فائدة / يستفيد",ex:"Exercise has many health benefits.",em:"💰",t:"General"},
+  {e:"beyond",a:"أبعد من / وراء",ex:"The park is beyond the bridge.",em:"➡️",t:"General"},
+  {e:"brief",a:"مختصر / موجز / يحيط علمًا",ex:"Please give a brief summary.",em:"📰",t:"General"},
+  {e:"bright",a:"ساطع / ذكي",ex:"The future looks bright.",em:"💡",t:"General"},
+  {e:"broad",a:"واسع / عريض",ex:"She has a broad knowledge.",em:"📏",t:"General"},
+  {e:"candidate",a:"مرشح / متقدم",ex:"He is a candidate for president.",em:"🧑",t:"General"},
+  {e:"capable",a:"قادر / كفء",ex:"She is capable of doing the job.",em:"💪",t:"General"},
+  {e:"capacity",a:"سعة / طاقة / قدرة",ex:"The stadium has a capacity of 50,000.",em:"📦",t:"General"},
+  {e:"capture",a:"يلتقط / يأسر",ex:"The photo captured a beautiful moment.",em:"📷",t:"General"},
+  {e:"care",a:"رعاية / يهتم / اهتمام",ex:"She cares about her students.",em:"🤲",t:"General"},
+  {e:"careless",a:"مهمل / غير مبالٍ",ex:"A careless mistake cost him the job.",em:"😕",t:"General"},
+  {e:"category",a:"فئة / تصنيف",ex:"She put it in the wrong category.",em:"📂",t:"General"},
+  {e:"cause",a:"يسبب / سبب",ex:"What caused the accident?",em:"⚡",t:"General"},
+  {e:"chance",a:"فرصة / احتمال / صدفة",ex:"Take every chance you get.",em:"🎲",t:"General"},
+  {e:"characteristic",a:"خاصية / سمة مميزة",ex:"Kindness is his best characteristic.",em:"🌟",t:"General"},
+  {e:"charity",a:"خيرية / صدقة",ex:"She donates to charity every month.",em:"💝",t:"General"},
+  {e:"chief",a:"رئيس / كبير / رئيسي",ex:"He is the chief officer.",em:"👑",t:"General"},
+  {e:"circumstance",a:"ظرف / حال",ex:"Under the circumstances, it was the best choice.",em:"🌍",t:"General"},
+  {e:"collapse",a:"ينهار / انهيار",ex:"The old building collapsed.",em:"🏚️",t:"General"},
+  {e:"collect",a:"يجمع / يحصل",ex:"He collects old coins.",em:"📦",t:"General"},
+  {e:"combination",a:"مزيج / تركيبة",ex:"A combination of hard work and talent.",em:"🔗",t:"General"},
+  {e:"combine",a:"يجمع / يدمج",ex:"Combine the two ingredients.",em:"🔗",t:"General"},
+  {e:"concern",a:"قلق / شأن / يقلق",ex:"Her health was a major concern.",em:"📞",t:"General"},
+  {e:"conclude",a:"يستنتج / يختتم",ex:"He concluded that more work was needed.",em:"✅",t:"General"},
+  {e:"condition",a:"حالة / شرط / ظرف",ex:"The road conditions were dangerous.",em:"🌡️",t:"General"},
+  {e:"confirm",a:"يؤكد / يثبت",ex:"Please confirm your attendance.",em:"✅",t:"General"},
+  {e:"consequence",a:"نتيجة / عاقبة",ex:"Think about the consequences.",em:"⚡",t:"General"},
+  {e:"conservative",a:"محافظ / متحفظ",ex:"He has conservative views.",em:"🔄",t:"General"},
+  {e:"consider",a:"يفكر في / يعتبر",ex:"Consider all your options.",em:"🤔",t:"General"},
+  {e:"construct",a:"يبني / ينشئ",ex:"They constructed a new bridge.",em:"🏗️",t:"General"},
+  {e:"contain",a:"يحتوي على",ex:"The box contains fragile items.",em:"📦",t:"General"},
+  {e:"contemporary",a:"معاصر / حديث",ex:"She prefers contemporary art.",em:"🕰️",t:"General"},
+  {e:"content",a:"محتوى / راضٍ",ex:"The content was very useful.",em:"📄",t:"General"},
+  {e:"continue",a:"يستمر / يكمل",ex:"Continue reading on page 10.",em:"🔄",t:"General"},
+  {e:"continuous",a:"متواصل / مستمر",ex:"She made continuous progress.",em:"🔄",t:"General"},
+  {e:"contract",a:"عقد / تعاقد / يتقلص",ex:"He signed a two-year contract.",em:"📜",t:"General"},
+  {e:"contrast",a:"تباين / يتناقض",ex:"There is a stark contrast between them.",em:"↔️",t:"General"},
+  {e:"contribute",a:"يساهم / يسهم",ex:"She contributed to the project.",em:"🤲",t:"General"},
+  {e:"contribution",a:"مساهمة",ex:"His contribution was invaluable.",em:"🤲",t:"General"},
+  {e:"convenient",a:"مناسب / ملائم",ex:"The location is very convenient.",em:"🛋️",t:"General"},
+  {e:"convert",a:"يحول / يغيّر",ex:"She converted her savings to dollars.",em:"🔄",t:"General"},
+  {e:"convince",a:"يقنع",ex:"He convinced her to join.",em:"🗣️",t:"General"},
+  {e:"core",a:"جوهر / أساس / لب",ex:"The core issue is funding.",em:"🌀",t:"General"},
+  {e:"critic",a:"ناقد / منتقد",ex:"The critic gave a bad review.",em:"🔍",t:"General"},
+  {e:"critical",a:"حرج / ناقد / مهم",ex:"This is a critical moment.",em:"⚠️",t:"General"},
+  {e:"criticism",a:"نقد / انتقاد",ex:"She accepted the criticism.",em:"⚠️",t:"General"},
+  {e:"criticize",a:"ينتقد",ex:"He criticized the plan.",em:"⚠️",t:"General"},
+  {e:"crowd",a:"حشد / جمع",ex:"A crowd gathered in the square.",em:"👥",t:"General"},
+  {e:"crowded",a:"مزدحم",ex:"The bus was very crowded.",em:"👥",t:"General"},
+  {e:"current",a:"حالي / تيار / جاري",ex:"What is the current situation?",em:"🔄",t:"General"},
+  {e:"currently",a:"حاليًا",ex:"She is currently living abroad.",em:"🔄",t:"General"},
+  {e:"debate",a:"نقاش / جدل / يتجادل",ex:"There was a debate about the new law.",em:"💬",t:"General"},
+  {e:"declare",a:"يعلن / يصرّح",ex:"He declared his intentions.",em:"🗣️",t:"General"},
+  {e:"define",a:"يعرّف / يحدد",ex:"Define the word in your own words.",em:"📖",t:"General"},
+  {e:"definite",a:"محدد / مؤكد",ex:"Give me a definite answer.",em:"✅",t:"General"},
+  {e:"definitely",a:"بالتأكيد",ex:"I will definitely come tomorrow.",em:"✅",t:"General"},
+  {e:"delay",a:"تأخير / يؤخّر",ex:"The flight was delayed by two hours.",em:"⏰",t:"General"},
+  {e:"deliver",a:"يسلّم / يلقي",ex:"He delivers parcels every day.",em:"📦",t:"General"},
+  {e:"demand",a:"يطلب / شرط / طلب",ex:"There is high demand for housing.",em:"📢",t:"General"},
+  {e:"demonstrate",a:"يبرهن / يستعرض",ex:"He demonstrated the new technique.",em:"🎭",t:"General"},
+  {e:"department",a:"قسم / وزارة",ex:"She works in the HR department.",em:"🏢",t:"General"},
+  {e:"departure",a:"مغادرة / رحيل",ex:"The departure was at 6am.",em:"✈️",t:"General"},
+  {e:"depth",a:"عمق / إمعان",ex:"The depth of the lake is 30 metres.",em:"📏",t:"General"},
+  {e:"describe",a:"يصف",ex:"Describe what you saw.",em:"🗣️",t:"General"},
+  {e:"deserve",a:"يستحق",ex:"She deserves to win.",em:"💪",t:"General"},
+  {e:"desire",a:"رغبة / يرغب في",ex:"He has a strong desire to succeed.",em:"💭",t:"General"},
+  {e:"despite",a:"بالرغم من",ex:"She smiled despite her pain.",em:"😖",t:"General"},
+  {e:"destroy",a:"يدمر / يخرب",ex:"The fire destroyed the building.",em:"💥",t:"General"},
+  {e:"detail",a:"تفصيل / يفصّل",ex:"Please provide more detail.",em:"📋",t:"General"},
+  {e:"detailed",a:"مفصّل / شامل",ex:"She wrote a detailed report.",em:"📋",t:"General"},
+  {e:"determine",a:"يحدد / يقرر",ex:"Effort determines success.",em:"🔑",t:"General"},
+  {e:"dialogue",a:"حوار / محادثة",ex:"The play has brilliant dialogue.",em:"📖",t:"General"},
+  {e:"difficult",a:"صعب / شاق",ex:"The exam was very difficult.",em:"😤",t:"General"},
+  {e:"difficulty",a:"صعوبة / عقبة",ex:"She had difficulty sleeping.",em:"😤",t:"General"},
+  {e:"disappear",a:"يختفي / يغيب",ex:"The sun disappeared behind the clouds.",em:"👁️",t:"General"},
+  {e:"disappointing",a:"مخيب للآمال",ex:"The results were disappointing.",em:"😞",t:"General"},
+  {e:"disaster",a:"كارثة",ex:"The earthquake was a disaster.",em:"💥",t:"General"},
+  {e:"dominate",a:"يهيمن / يسيطر",ex:"One company dominates the market.",em:"💀",t:"General"},
+  {e:"doubt",a:"شك / يشك في",ex:"I have serious doubts about this.",em:"❓",t:"General"},
+  {e:"earn",a:"يكسب / يستحق",ex:"How much does he earn per month?",em:"💵",t:"General"},
+  {e:"effective",a:"فعّال / مؤثر",ex:"The treatment was very effective.",em:"✅",t:"General"},
+  {e:"effectively",a:"بفعالية",ex:"She communicates effectively.",em:"✅",t:"General"},
+  {e:"efficient",a:"كفء / فعال",ex:"She is an efficient worker.",em:"⚙️",t:"General"},
+  {e:"emerge",a:"يظهر / يبرز",ex:"A new trend has emerged.",em:"🌅",t:"General"},
+  {e:"enormous",a:"ضخم / هائل",ex:"The task was enormous.",em:"💪",t:"General"},
+  {e:"ensure",a:"يضمن / يتأكد",ex:"Ensure the door is locked.",em:"✅",t:"General"},
+  {e:"entire",a:"كامل / تام",ex:"She spent the entire day reading.",em:"🏠",t:"General"},
+  {e:"entirely",a:"تمامًا / كليًا",ex:"I entirely agree.",em:"🏠",t:"General"},
+  {e:"ethical",a:"أخلاقي / متعلق بالأخلاق",ex:"Is it ethical to test on animals?",em:"⚖️",t:"General"},
+  {e:"evaluate",a:"يقيم / يثمّن",ex:"Evaluate the pros and cons.",em:"📊",t:"General"},
+  {e:"event",a:"حدث / مناسبة",ex:"The event was a great success.",em:"📅",t:"General"},
+  {e:"exchange",a:"يتبادل / صرف",ex:"She exchanged dollars for euros.",em:"🔄",t:"General"},
+  {e:"excitement",a:"إثارة / حماس",ex:"The excitement was overwhelming.",em:"🎉",t:"General"},
+  {e:"expand",a:"يتوسع / يمتد",ex:"The company plans to expand.",em:"🌟",t:"General"},
+  {e:"expect",a:"يتوقع",ex:"I expect you to be on time.",em:"🤔",t:"General"},
+  {e:"expectation",a:"توقع / أمل",ex:"She exceeded all expectations.",em:"🤔",t:"General"},
+  {e:"expose",a:"يكشف / يعرّض",ex:"The report exposed the corruption.",em:"🔭",t:"General"},
+  {e:"extend",a:"يمتد / يمدد",ex:"The deadline was extended.",em:"🔄",t:"General"},
+  {e:"extent",a:"مدى / حجم",ex:"To what extent is this true?",em:"📏",t:"General"},
+  {e:"external",a:"خارجي",ex:"He has an external appointment.",em:"🌍",t:"General"},
+  {e:"extraordinary",a:"استثنائي / رائع",ex:"She has an extraordinary talent.",em:"✨",t:"General"},
+  {e:"extreme",a:"متطرف / شديد",ex:"Extreme weather events are increasing.",em:"⚡",t:"General"},
+  {e:"extremely",a:"للغاية / بشكل مفرط",ex:"She is extremely talented.",em:"⚡",t:"General"},
+  {e:"factor",a:"عامل / عنصر / مثير",ex:"Diet is a key factor in health.",em:"⚡",t:"General"},
+  {e:"fair",a:"عادل / مقبول / معرض",ex:"That's not a fair decision.",em:"⚖️",t:"General"},
+  {e:"fairly",a:"بشكل عادل / إلى حد ما",ex:"She was treated fairly.",em:"⚖️",t:"General"},
+  {e:"false",a:"كاذب / خاطئ",ex:"The alarm was a false alert.",em:"❌",t:"General"},
+  {e:"fascinating",a:"رائع / مثير للاهتمام",ex:"The documentary was fascinating.",em:"✨",t:"General"},
+  {e:"fault",a:"خطأ / عيب",ex:"It wasn't her fault.",em:"😟",t:"General"},
+  {e:"feature",a:"خاصية / ملمح / يبرز",ex:"What are the main features?",em:"🌟",t:"General"},
+  {e:"fee",a:"رسم / أجر",ex:"The entrance fee is £10.",em:"💵",t:"General"},
+  {e:"field",a:"حقل / مجال",ex:"She works in the field of medicine.",em:"🌾",t:"General"},
+  {e:"figure",a:"رقم / شكل / شخص",ex:"The sales figures were impressive.",em:"🔢",t:"General"},
+  {e:"firm",a:"شركة / ثابت / محكم",ex:"She spoke in a firm voice.",em:"💪",t:"General"},
+  {e:"flexible",a:"مرن / قابل للثني",ex:"The schedule is flexible.",em:"🤸",t:"General"},
+  {e:"flow",a:"يتدفق / تدفق",ex:"The water flows down the mountain.",em:"🌊",t:"General"},
+  {e:"force",a:"قوة / دافعة / يجبر",ex:"She was forced to leave.",em:"💪",t:"General"},
+  {e:"form",a:"شكل / نموذج / يشكّل",ex:"Fill in the form carefully.",em:"📝",t:"General"},
+  {e:"former",a:"سابق / الأول من اثنين",ex:"The former president visited the city.",em:"⏮️",t:"General"},
+  {e:"fortunately",a:"لحسن الحظ",ex:"Fortunately, no one was hurt.",em:"🌟",t:"General"},
+  {e:"fortune",a:"ثروة / حظ / مستقبل",ex:"She made a fortune from her business.",em:"💰",t:"General"},
+  {e:"frequently",a:"كثيرًا / بانتظام",ex:"She frequently travels abroad.",em:"🔄",t:"General"},
+  {e:"fundamental",a:"أساسي / جوهري",ex:"Education is a fundamental right.",em:"⚙️",t:"General"},
+  {e:"furthermore",a:"علاوة على ذلك",ex:"Furthermore, the price is fair.",em:"➕",t:"General"},
+  {e:"gap",a:"فجوة / فراغ",ex:"There is a gap between rich and poor.",em:"↔️",t:"General"},
+  {e:"gather",a:"يجمع / يتجمع",ex:"They gathered around the table.",em:"🌾",t:"General"},
+  {e:"generation",a:"جيل",ex:"Each generation faces new challenges.",em:"👨‍👩‍👧",t:"General"},
+  {e:"goods",a:"بضائع / سلع",ex:"The goods were delivered on time.",em:"🌐",t:"General"},
+  {e:"gradually",a:"تدريجيًا",ex:"He gradually improved.",em:"🐌",t:"General"},
+  {e:"grand",a:"رائع / ضخم / كبير",ex:"It was a grand ceremony.",em:"🏛️",t:"General"},
+  {e:"guard",a:"حارس / يحرس",ex:"The guard stood at the gate.",em:"👮",t:"General"},
+  {e:"happen",a:"يحدث / يقع",ex:"What happened here?",em:"⚡",t:"General"},
+  {e:"harm",a:"ضرر / يلحق ضررًا",ex:"Smoking can harm your health.",em:"😟",t:"General"},
+  {e:"harmful",a:"ضار / مذٍ",ex:"UV rays are harmful to skin.",em:"😟",t:"General"},
+  {e:"heavily",a:"بشدة / بثقل",ex:"It rained heavily last night.",em:"⚖️",t:"General"},
+  {e:"height",a:"ارتفاع / طول الشخص",ex:"What is the height of this building?",em:"📏",t:"General"},
+  {e:"hesitate",a:"يتردد / يتوقف",ex:"Don't hesitate to ask for help.",em:"⏸️",t:"General"},
+  {e:"honour",a:"شرف / كرامة / يكرّم",ex:"It's an honour to meet you.",em:"🎖️",t:"General"},
+  {e:"huge",a:"ضخم / هائل",ex:"The stadium is huge.",em:"😲",t:"General"},
+  {e:"hurry",a:"يسرع / عجلة",ex:"Hurry up or we'll be late.",em:"⏰",t:"General"},
+  {e:"ignore",a:"يتجاهل / يهمل",ex:"Don't ignore warning signs.",em:"🔍",t:"General"},
+  {e:"immediate",a:"فوري / مباشر",ex:"I need an immediate answer.",em:"🤔",t:"General"},
+  {e:"immediately",a:"فورًا",ex:"Call me immediately.",em:"🤔",t:"General"},
+  {e:"impact",a:"تأثير / صدمة",ex:"The new policy had a huge impact.",em:"💥",t:"General"},
+  {e:"importance",a:"أهمية",ex:"The importance of education is clear.",em:"💼",t:"General"},
+  {e:"impose",a:"يفرض / يلزم",ex:"The government imposed new taxes.",em:"📌",t:"General"},
+  {e:"impress",a:"يبهر / يثير الإعجاب",ex:"She impressed the judges.",em:"😲",t:"General"},
+  {e:"impression",a:"انطباع / أثر",ex:"She made a great first impression.",em:"😲",t:"General"},
+  {e:"impressive",a:"مثير للإعجاب",ex:"The results were impressive.",em:"😲",t:"General"},
+  {e:"include",a:"يتضمن / يشمل",ex:"The price includes breakfast.",em:"📦",t:"General"},
+  {e:"increase",a:"يزيد / ارتفاع",ex:"Prices are set to increase.",em:"📈",t:"General"},
+  {e:"increasingly",a:"بشكل متزايد",ex:"Life is increasingly digital.",em:"📈",t:"General"},
+  {e:"incredible",a:"رائع / لا يُصدَّق",ex:"She has incredible talent.",em:"✨",t:"General"},
+  {e:"indicate",a:"يدل على / يشير إلى",ex:"The data indicates a rise.",em:"🔍",t:"General"},
+  {e:"individual",a:"فرد / فردي",ex:"Every individual matters.",em:"👤",t:"General"},
+  {e:"influence",a:"تأثير / يؤثر على",ex:"Music influences our mood.",em:"💊",t:"General"},
+  {e:"initial",a:"أولي / مبدئي",ex:"His initial reaction was surprise.",em:"🌟",t:"General"},
+  {e:"initially",a:"في البداية",ex:"Initially, I didn't like it.",em:"🌟",t:"General"},
+  {e:"initiative",a:"مبادرة",ex:"She took the initiative.",em:"💡",t:"General"},
+  {e:"inner",a:"داخلي / باطن",ex:"Trust your inner voice.",em:"🏠",t:"General"},
+  {e:"insight",a:"فطنة / بصيرة",ex:"He offered valuable insight.",em:"💡",t:"General"},
+  {e:"insist",a:"يصر / يلح",ex:"She insisted on paying.",em:"✊",t:"General"},
+  {e:"instance",a:"مثال / حالة",ex:"For instance, consider this case.",em:"📚",t:"General"},
+  {e:"instead",a:"بدلًا من",ex:"She took tea instead of coffee.",em:"↩️",t:"General"},
+  {e:"intend",a:"ينوي / يقصد",ex:"I intend to finish today.",em:"🎯",t:"General"},
+  {e:"intense",a:"شديد / قوي",ex:"The heat was intense.",em:"🔥",t:"General"},
+  {e:"international",a:"دولي",ex:"She speaks at international conferences.",em:"🌍",t:"General"},
+  {e:"interpret",a:"يفسر / يترجم",ex:"How do you interpret this poem?",em:"📖",t:"General"},
+  {e:"interrupt",a:"يقاطع / يوقف",ex:"Don't interrupt while I'm speaking.",em:"🚫",t:"General"},
+  {e:"introduce",a:"يقدم / يعرّف",ex:"Let me introduce myself.",em:"👋",t:"General"},
+  {e:"introduction",a:"مقدمة / تقديم",ex:"The book has a great introduction.",em:"📚",t:"General"},
+  {e:"investigate",a:"يحقق في",ex:"The police investigated the case.",em:"🔎",t:"General"},
+  {e:"involve",a:"يتضمن / يشرك",ex:"The job involves travelling.",em:"🤝",t:"General"},
+  {e:"judge",a:"قاضٍ / يحكم / يقيّم",ex:"Don't judge a book by its cover.",em:"⚖️",t:"General"},
+  {e:"judgement",a:"حكم / قرار",ex:"He has good judgement.",em:"⚖️",t:"General"},
+  {e:"junior",a:"مبتدئ / أصغر سنًا",ex:"She is a junior employee.",em:"👦",t:"General"},
+  {e:"lack",a:"يفتقر إلى / نقص",ex:"There is a lack of resources.",em:"🔑",t:"General"},
+  {e:"largely",a:"إلى حد بعيد / بشكل رئيسي",ex:"The project was largely successful.",em:"📏",t:"General"},
+  {e:"lean",a:"يستند / ميل / رشيق",ex:"Lean against the wall.",em:"🍃",t:"General"},
+  {e:"leisure",a:"وقت الفراغ / ترفيه",ex:"He enjoys leisure activities.",em:"😌",t:"General"},
+  {e:"lend",a:"يقرض / يعطي وقتًا",ex:"Can you lend me your pen?",em:"🤝",t:"General"},
+  {e:"length",a:"طول / مدة",ex:"The length of the table is 2 metres.",em:"📏",t:"General"},
+  {e:"licence",a:"رخصة / ترخيص",ex:"She has a driving licence.",em:"📜",t:"General"},
+  {e:"location",a:"موقع / مكان",ex:"The location of the hotel is perfect.",em:"📍",t:"General"},
+  {e:"loose",a:"فضفاض / رخو / حر",ex:"The screw is loose.",em:"🔓",t:"General"},
+  {e:"main",a:"رئيسي / أساسي",ex:"What is the main point?",em:"🗺️",t:"General"},
+  {e:"mainly",a:"بصفة رئيسية",ex:"The population is mainly young.",em:"🗺️",t:"General"},
+  {e:"maintain",a:"يحافظ على / يبقي",ex:"Maintain a healthy lifestyle.",em:"🔧",t:"General"},
+  {e:"major",a:"رئيسي / كبير / يتخصص في",ex:"It was a major breakthrough.",em:"🌟",t:"General"},
+  {e:"majority",a:"الأغلبية",ex:"The majority voted in favour.",em:"👥",t:"General"},
+  {e:"manner",a:"طريقة / أسلوب / آداب",ex:"He spoke in a polite manner.",em:"🤝",t:"General"},
+  {e:"massive",a:"ضخم / هائل / كبير",ex:"A massive crowd gathered.",em:"💪",t:"General"},
+  {e:"master",a:"ماجستير / يتقن",ex:"She mastered the piano.",em:"🎓",t:"General"},
+  {e:"matter",a:"يهم / أمر / مادة",ex:"It doesn't matter.",em:"❓",t:"General"},
+  {e:"meanwhile",a:"في غضون ذلك / في نفس الوقت",ex:"Meanwhile, the police arrived.",em:"⏰",t:"General"},
+  {e:"member",a:"عضو",ex:"She is a member of the club.",em:"👥",t:"General"},
+  {e:"mess",a:"فوضى / وضع خربان",ex:"The room was a mess.",em:"😵",t:"General"},
+  {e:"mild",a:"معتدل / خفيف",ex:"The weather was mild.",em:"🌡️",t:"General"},
+  {e:"military",a:"عسكري",ex:"He served in the military.",em:"🎖️",t:"General"},
+  {e:"minister",a:"وزير",ex:"She became a government minister.",em:"👑",t:"General"},
+  {e:"minor",a:"بسيط / ثانوي / قاصر",ex:"It was a minor problem.",em:"👦",t:"General"},
+  {e:"minority",a:"أقلية",ex:"Protect the rights of minorities.",em:"👥",t:"General"},
+  {e:"mixture",a:"خليط / مزيج",ex:"Add the mixture to the bowl.",em:"🔀",t:"General"},
+  {e:"multiple",a:"متعدد / كثير",ex:"She received multiple offers.",em:"🔢",t:"General"},
+  {e:"mysterious",a:"غامض / محيّر",ex:"The disappearance was mysterious.",em:"🔮",t:"General"},
+  {e:"nation",a:"أمة / دولة",ex:"The whole nation mourned.",em:"🌍",t:"General"},
+  {e:"national",a:"وطني / قومي",ex:"The national team won.",em:"🌍",t:"General"},
+  {e:"naturally",a:"بشكل طبيعي / بالطبع",ex:"She naturally speaks French.",em:"🌿",t:"General"},
+  {e:"necessary",a:"ضروري / لازم",ex:"Rest is necessary for recovery.",em:"✅",t:"General"},
+  {e:"nevertheless",a:"مع ذلك / بالرغم من ذلك",ex:"She kept going, nevertheless.",em:"🔄",t:"General"},
+  {e:"numerous",a:"عديد / كثير",ex:"She received numerous awards.",em:"🔢",t:"General"},
+  {e:"obvious",a:"واضح / جليّ",ex:"It was obvious he was lying.",em:"✅",t:"General"},
+  {e:"obviously",a:"من الواضح / بوضوح",ex:"Obviously, she was upset.",em:"✅",t:"General"},
+  {e:"occasion",a:"مناسبة / فرصة",ex:"On this special occasion...",em:"📅",t:"General"},
+  {e:"occasionally",a:"أحيانًا / بين الحين والآخر",ex:"She occasionally visits her parents.",em:"📅",t:"General"},
+  {e:"occur",a:"يحدث / يخطر بالبال",ex:"An idea occurred to me.",em:"⚡",t:"General"},
+  {e:"opponent",a:"خصم / منافس",ex:"His opponent was very strong.",em:"⚔️",t:"General"},
+  {e:"organization",a:"منظمة / تنظيم",ex:"She works for a non-profit organization.",em:"📋",t:"General"},
+  {e:"organize",a:"ينظم / يرتب",ex:"She organized the event beautifully.",em:"📋",t:"General"},
+  {e:"origin",a:"أصل / مصدر / منشأ",ex:"What is the origin of this word?",em:"🌅",t:"General"},
+  {e:"otherwise",a:"وإلا / بطريقة أخرى",ex:"Hurry, otherwise we'll be late.",em:"🔄",t:"General"},
+  {e:"ought",a:"ينبغي / يجب",ex:"You ought to apologize.",em:"✅",t:"General"},
+  {e:"outcome",a:"نتيجة / مخرج",ex:"The outcome was positive.",em:"🎯",t:"General"},
+  {e:"overall",a:"إجمالي / عمومًا",ex:"Overall, the project was a success.",em:"📊",t:"General"},
+  {e:"owe",a:"يدين / يتحمّل",ex:"He owes me money.",em:"💳",t:"General"},
+  {e:"pace",a:"وتيرة / خطوة",ex:"She walked at a slow pace.",em:"🚶",t:"General"},
+  {e:"package",a:"حزمة / طرد / باقة",ex:"She received a package by post.",em:"📦",t:"General"},
+  {e:"paragraph",a:"فقرة / مقطع",ex:"Write three paragraphs.",em:"📄",t:"General"},
+  {e:"participant",a:"مشارك",ex:"Each participant received a certificate.",em:"📄",t:"General"},
+  {e:"participate",a:"يشارك",ex:"Please participate in the discussion.",em:"🤝",t:"General"},
+  {e:"particular",a:"خاص / محدد / دقيق",ex:"She has a particular talent.",em:"🌟",t:"General"},
+  {e:"particularly",a:"بشكل خاص / خاصةً",ex:"I particularly enjoyed the film.",em:"🌟",t:"General"},
+  {e:"partly",a:"جزئيًا",ex:"This is partly my fault.",em:"↔️",t:"General"},
+  {e:"partner",a:"شريك / رفيق",ex:"She is my business partner.",em:"🤝",t:"General"},
+  {e:"perhaps",a:"ربما / من المحتمل",ex:"Perhaps she forgot.",em:"🤔",t:"General"},
+  {e:"permanent",a:"دائم / ثابت",ex:"She got a permanent job.",em:"🔒",t:"General"},
+  {e:"permit",a:"يسمح / تصريح / رخصة",ex:"Smoking is not permitted here.",em:"🔑",t:"General"},
+  {e:"perspective",a:"منظور / وجهة نظر",ex:"Try to see it from her perspective.",em:"👁️",t:"General"},
+  {e:"persuade",a:"يقنع / يحثّ",ex:"He persuaded her to stay.",em:"🗣️",t:"General"},
+  {e:"phase",a:"مرحلة / طور",ex:"The first phase is complete.",em:"📈",t:"General"},
+  {e:"phenomenon",a:"ظاهرة",ex:"Climate change is a global phenomenon.",em:"🔬",t:"General"},
+  {e:"piece",a:"قطعة / جزء",ex:"She played a piece on the piano.",em:"🧩",t:"General"},
+  {e:"planning",a:"تخطيط / تنظيم",ex:"Good planning leads to success.",em:"📋",t:"General"},
+  {e:"position",a:"موضع / منصب / موقف",ex:"He applied for a high position.",em:"🏠",t:"General"},
+  {e:"possess",a:"يمتلك / يحوز",ex:"She possesses great talent.",em:"🥇",t:"General"},
+  {e:"possibility",a:"احتمال / إمكانية",ex:"There is a possibility of rain.",em:"✅",t:"General"},
+  {e:"possibly",a:"من المحتمل / ربما",ex:"Could you possibly help me?",em:"✅",t:"General"},
+  {e:"praise",a:"مدح / ثناء / يمتدح",ex:"The teacher praised her work.",em:"🌟",t:"General"},
+  {e:"predict",a:"يتنبأ / يتوقع",ex:"It is hard to predict the future.",em:"🔮",t:"General"},
+  {e:"preparation",a:"تحضير / إعداد",ex:"Preparation is key to success.",em:"📋",t:"General"},
+  {e:"presence",a:"وجود / حضور",ex:"Her presence was calming.",em:"🌟",t:"General"},
+  {e:"preserve",a:"يحافظ على / يبقي",ex:"Preserve the historic buildings.",em:"🌿",t:"General"},
+  {e:"president",a:"رئيس دولة",ex:"The president gave a speech.",em:"👑",t:"General"},
+  {e:"pressure",a:"ضغط / إجهاد",ex:"He works well under pressure.",em:"😰",t:"General"},
+  {e:"prevent",a:"يمنع / يتحاشى",ex:"Wash your hands to prevent infection.",em:"🚫",t:"General"},
+  {e:"previous",a:"سابق / السابق",ex:"The previous owner repainted the house.",em:"⏮️",t:"General"},
+  {e:"previously",a:"من قبل / سابقًا",ex:"She previously worked in finance.",em:"⏮️",t:"General"},
+  {e:"principle",a:"مبدأ / قاعدة",ex:"She stuck to her principles.",em:"💡",t:"General"},
+  {e:"procedure",a:"إجراء / خطوات",ex:"Follow the correct procedure.",em:"📋",t:"General"},
+  {e:"pronounce",a:"ينطق / يعلن",ex:"How do you pronounce this word?",em:"🗣️",t:"General"},
+  {e:"proper",a:"لائق / صحيح / مناسب",ex:"Use proper grammar.",em:"✅",t:"General"},
+  {e:"properly",a:"بشكل صحيح",ex:"Make sure you eat properly.",em:"✅",t:"General"},
+  {e:"proposal",a:"اقتراح / مشروع / قرار",ex:"The proposal was accepted.",em:"📋",t:"General"},
+  {e:"prove",a:"يثبت / يتبين",ex:"She proved her innocence.",em:"✅",t:"General"},
+  {e:"provide",a:"يوفر / يقدم",ex:"They provided food for the homeless.",em:"🤲",t:"General"},
+  {e:"quantity",a:"كمية / عدد",ex:"They ordered a large quantity.",em:"📦",t:"General"},
+  {e:"quit",a:"يستقيل / يتوقف",ex:"She quit her job last month.",em:"🚪",t:"General"},
+  {e:"quite",a:"تمامًا / إلى حد ما",ex:"It was quite a surprise.",em:"✅",t:"General"},
+  {e:"range",a:"نطاق / مدى / مجموعة",ex:"The price range is reasonable.",em:"📊",t:"General"},
+  {e:"rare",a:"نادر / غير شائع",ex:"Snow is rare in Egypt.",em:"💎",t:"General"},
+  {e:"rather",a:"بالأحرى / نسبيًا / أفضل",ex:"She would rather stay home.",em:"🤔",t:"General"},
+  {e:"reach",a:"يصل إلى / يمتد إلى",ex:"She reached the top of her career.",em:"🤝",t:"General"},
+  {e:"recall",a:"يتذكر / يسحب من السوق",ex:"I can't recall his name.",em:"💭",t:"General"},
+  {e:"receive",a:"يستقبل / يتلقى",ex:"She received a letter.",em:"📬",t:"General"},
+  {e:"recent",a:"حديث / أخيرًا",ex:"Have you seen any recent news?",em:"🕰️",t:"General"},
+  {e:"recently",a:"مؤخرًا",ex:"She recently moved abroad.",em:"🕰️",t:"General"},
+  {e:"recognize",a:"يتعرف على / يعترف",ex:"I didn't recognize him.",em:"✅",t:"General"},
+  {e:"register",a:"يسجّل / سجل",ex:"Register for the course online.",em:"📋",t:"General"},
+  {e:"relatively",a:"نسبيًا",ex:"She is relatively young.",em:"⚖️",t:"General"},
+  {e:"release",a:"يطلق / يصدر / إصدار",ex:"The film was released last week.",em:"🆓",t:"General"},
+  {e:"relevant",a:"ذو صلة / مناسب",ex:"Keep your answer relevant.",em:"✅",t:"General"},
+  {e:"reliable",a:"موثوق / يُعتمد عليه",ex:"She is a reliable worker.",em:"✅",t:"General"},
+  {e:"religion",a:"دين / عقيدة",ex:"Religion plays a big role in his life.",em:"🙏",t:"General"},
+  {e:"rely",a:"يعتمد على / يثق في",ex:"You can rely on her.",em:"🤝",t:"General"},
+  {e:"remain",a:"يبقى / يستمر",ex:"She remained calm.",em:"🏠",t:"General"},
+  {e:"repair",a:"يصلح / إصلاح / يرمم",ex:"He repaired the broken engine.",em:"🔧",t:"General"},
+  {e:"represent",a:"يمثل / يرمز إلى",ex:"She represents her country.",em:"🎭",t:"General"},
+  {e:"representative",a:"ممثل / نائب",ex:"He is our representative.",em:"🎭",t:"General"},
+  {e:"reputation",a:"سمعة / شهرة",ex:"She has a good reputation.",em:"⭐",t:"General"},
+  {e:"require",a:"يتطلب / يشترط",ex:"This job requires experience.",em:"✅",t:"General"},
+  {e:"rescue",a:"ينقذ / إنقاذ",ex:"The team rescued the survivors.",em:"🚒",t:"General"},
+  {e:"reserve",a:"يحجز / احتياطي / يحتفظ",ex:"Please reserve a table.",em:"🏠",t:"General"},
+  {e:"resident",a:"ساكن / مقيم",ex:"She is a long-term resident.",em:"🏠",t:"General"},
+  {e:"resist",a:"يقاوم / يتحمل",ex:"She resisted the temptation.",em:"💪",t:"General"},
+  {e:"result",a:"نتيجة",ex:"The results were positive.",em:"✅",t:"General"},
+  {e:"retain",a:"يحتفظ بـ / يبقي",ex:"The company retained its best staff.",em:"🔒",t:"General"},
+  {e:"retire",a:"يتقاعد",ex:"He retired at 65.",em:"🛋️",t:"General"},
+  {e:"revolution",a:"ثورة / دورة كاملة",ex:"The French Revolution changed history.",em:"⚡",t:"General"},
+  {e:"reward",a:"مكافأة / يكافئ",ex:"Hard work deserves a reward.",em:"🏆",t:"General"},
+  {e:"rid",a:"يتخلص من",ex:"Get rid of old clothes.",em:"🚮",t:"General"},
+  {e:"rise",a:"يرتفع / ارتفاع",ex:"Prices continue to rise.",em:"📈",t:"General"},
+  {e:"role",a:"دور / وظيفة",ex:"She played a key role.",em:"🎭",t:"General"},
+  {e:"rough",a:"خشن / وعر / تقريبي",ex:"The sea was rough.",em:"🌊",t:"General"},
+  {e:"round",a:"مستدير / جولة / حوالي",ex:"She won the first round.",em:"🔄",t:"General"},
+  {e:"rub",a:"يحك / يفرك",ex:"Rub the stain gently.",em:"👑",t:"General"},
+  {e:"sample",a:"عينة / نموذج / يأخذ عينة",ex:"They took a sample for testing.",em:"💰",t:"General"},
+  {e:"satisfied",a:"راضٍ / مقتنع",ex:"She was satisfied with the result.",em:"😊",t:"General"},
+  {e:"scene",a:"مشهد / موقع الحادثة",ex:"The scene was beautiful.",em:"🎬",t:"General"},
+  {e:"seek",a:"يبحث عن / سعى إلى",ex:"She is seeking a new job.",em:"🔍",t:"General"},
+  {e:"seem",a:"يبدو / يظهر",ex:"She seems tired today.",em:"👁️",t:"General"},
+  {e:"senior",a:"كبير / أول / أكبر سنًا",ex:"He is a senior member of staff.",em:"👴",t:"General"},
+  {e:"separate",a:"يفصل / منفصل",ex:"Keep the two teams separate.",em:"↔️",t:"General"},
+  {e:"sequence",a:"تسلسل / ترتيب",ex:"Follow the sequence of steps.",em:"🔢",t:"General"},
+  {e:"settle",a:"يستقر / يسوّي / يحسم",ex:"They settled their differences.",em:"🏠",t:"General"},
+  {e:"shake",a:"يهز / يصافح / يرتجف",ex:"She shook hands with the director.",em:"🤝",t:"General"},
+  {e:"shape",a:"شكل / هيئة / يشكّل",ex:"The diamond has an unusual shape.",em:"🌊",t:"General"},
+  {e:"shelter",a:"ملجأ / مأوى / يحتمي",ex:"The tree provided shelter.",em:"🏠",t:"General"},
+  {e:"shift",a:"يتحول / وردية / تحول",ex:"The shift starts at 9am.",em:"🔄",t:"General"},
+  {e:"shine",a:"يلمع / يتألق / يُضيء",ex:"The sun shines all day.",em:"✨",t:"General"},
+  {e:"shock",a:"صدمة / يُصدم / يدهش",ex:"The news was a shock.",em:"💥",t:"General"},
+  {e:"sign",a:"إشارة / يوقّع / يحمّل",ex:"She signed the document.",em:"🪧",t:"General"},
+  {e:"significant",a:"مهم / ذو دلالة",ex:"This is a significant discovery.",em:"🌟",t:"General"},
+  {e:"significantly",a:"بشكل ملحوظ / بشكل كبير",ex:"Prices rose significantly.",em:"🌟",t:"General"},
+  {e:"silence",a:"صمت / سكون",ex:"There was complete silence.",em:"🤫",t:"General"},
+  {e:"silly",a:"سخيف / أحمق",ex:"That was a silly mistake.",em:"😅",t:"General"},
+  {e:"similar",a:"مماثل / شبيه",ex:"The two houses are similar.",em:"↔️",t:"General"},
+  {e:"similarity",a:"تشابه / أوجه مشتركة",ex:"There is a similarity between them.",em:"↔️",t:"General"},
+  {e:"similarly",a:"بالمثل / على نحو مماثل",ex:"Similarly, this rule applies here.",em:"↔️",t:"General"},
+  {e:"site",a:"موقع / مكان / موقع ويب",ex:"The construction site is busy.",em:"📍",t:"General"},
+  {e:"slight",a:"طفيف / خفيف / بسيط",ex:"There was a slight improvement.",em:"😌",t:"General"},
+  {e:"slightly",a:"بشكل طفيف",ex:"She felt slightly better.",em:"😌",t:"General"},
+  {e:"slip",a:"يزنلق / ينزلق / ورقة",ex:"Be careful not to slip.",em:"💧",t:"General"},
+  {e:"slope",a:"منحدر / ينحدر",ex:"The slope was steep.",em:"⛰️",t:"General"},
+  {e:"solution",a:"حل / محلول",ex:"We need to find a solution.",em:"💰",t:"General"},
+  {e:"solve",a:"يحل / يعالج",ex:"Can you solve this problem?",em:"💡",t:"General"},
+  {e:"specific",a:"محدد / دقيق",ex:"Give me specific details.",em:"🔍",t:"General"},
+  {e:"specifically",a:"بشكل تحديدي",ex:"She specifically asked for help.",em:"🔍",t:"General"},
+  {e:"spirit",a:"روح / معنويات",ex:"She has a fighting spirit.",em:"👻",t:"General"},
+  {e:"spiritual",a:"روحاني / ديني",ex:"He has a spiritual connection.",em:"👻",t:"General"},
+  {e:"spread",a:"ينتشر / يمتد / يوزع",ex:"The news spread quickly.",em:"🌀",t:"General"},
+  {e:"stable",a:"مستقر / إسطبل",ex:"The situation is now stable.",em:"🏗️",t:"General"},
+  {e:"standard",a:"معيار / مستوى / قياسي",ex:"She maintains high standards.",em:"📏",t:"General"},
+  {e:"stare",a:"يحدق / نظرة ثابتة",ex:"She stared out the window.",em:"👀",t:"General"},
+  {e:"statue",a:"تمثال",ex:"The statue is 10 metres tall.",em:"🗿",t:"General"},
+  {e:"steady",a:"ثابت / منتظم / هادئ",ex:"She made steady progress.",em:"📈",t:"General"},
+  {e:"steel",a:"فولاذ / يتصلب",ex:"The tower is made of steel.",em:"🏗️",t:"General"},
+  {e:"stick",a:"عصا / يلصق / يثبت",ex:"Stick to the plan.",em:"🪵",t:"General"},
+  {e:"sticky",a:"لزج / لاصق",ex:"Her hands were sticky.",em:"🍯",t:"General"},
+  {e:"straight",a:"مستقيم / مباشرة",ex:"Go straight ahead.",em:"📏",t:"General"},
+  {e:"stretch",a:"يمتد / يتمدد / يرن العضلات",ex:"Stretch before exercising.",em:"💪",t:"General"},
+  {e:"struggle",a:"كفاح / يكافح / يجاهد",ex:"She struggled to pay the bills.",em:"😤",t:"General"},
+  {e:"submit",a:"يقدم / يخضع",ex:"Submit your report by Friday.",em:"📤",t:"General"},
+  {e:"such",a:"مثل هذا / كذلك",ex:"She has such a kind heart.",em:"✅",t:"General"},
+  {e:"sudden",a:"مفاجئ",ex:"It was a sudden change.",em:"⚡",t:"General"},
+  {e:"suddenly",a:"فجأة",ex:"She suddenly started to cry.",em:"⚡",t:"General"},
+  {e:"suffer",a:"يعاني / يتألم",ex:"She suffers from headaches.",em:"😟",t:"General"},
+  {e:"suitable",a:"مناسب / ملائم",ex:"Is this suitable for children?",em:"✅",t:"General"},
+  {e:"sum",a:"مجموع / مبلغ / خلاصة",ex:"The sum of 3 and 4 is 7.",em:"🔢",t:"General"},
+  {e:"supply",a:"يمد / يزود / إمداد",ex:"They supply food to the market.",em:"📦",t:"General"},
+  {e:"surround",a:"يحيط / يطوق",ex:"Trees surround the house.",em:"🌀",t:"General"},
+  {e:"survey",a:"استطلاع / يستطلع / مسح",ex:"A survey was conducted.",em:"📊",t:"General"},
+  {e:"suspect",a:"مشتبه به / يشتبه في",ex:"Police suspect him.",em:"🔍",t:"General"},
+  {e:"sweep",a:"يكنس / يجرف",ex:"She swept the floor.",em:"🌬️",t:"General"},
+  {e:"tape",a:"شريط لاصق / يسجّل",ex:"She taped the broken box.",em:"📼",t:"General"},
+  {e:"taste",a:"طعم / يتذوق / ذوق",ex:"The soup tastes delicious.",em:"👅",t:"General"},
+  {e:"tear",a:"دمعة / يمزق",ex:"She wiped a tear from her eye.",em:"💧",t:"General"},
+  {e:"tend",a:"يميل إلى / يهتم بـ",ex:"She tends to work late.",em:"📈",t:"General"},
+  {e:"term",a:"مصطلح / فصل دراسي / مدة",ex:"Define the term clearly.",em:"📝",t:"General"},
+  {e:"terrible",a:"فظيع / سيئ جدًا",ex:"The weather was terrible.",em:"😖",t:"General"},
+  {e:"therefore",a:"لذلك / وبالتالي",ex:"He was late; therefore, he missed it.",em:"🌡️",t:"General"},
+  {e:"thick",a:"سميك / غليظ / كثيف",ex:"The walls are thick.",em:"🧱",t:"General"},
+  {e:"thief",a:"لص / سارق",ex:"The thief was caught.",em:"🦹",t:"General"},
+  {e:"thin",a:"نحيل / رقيق / ضعيف",ex:"The ice is too thin to walk on.",em:"💧",t:"General"},
+  {e:"threat",a:"تهديد / خطر",ex:"Climate change is a major threat.",em:"⚠️",t:"General"},
+  {e:"threaten",a:"يهدد",ex:"He threatened to leave.",em:"⚠️",t:"General"},
+  {e:"thus",a:"وبذلك / وعليه",ex:"He studied hard; thus he passed.",em:"✅",t:"General"},
+  {e:"tidy",a:"يرتب / ينظف / مرتب",ex:"Keep your room tidy.",em:"🧹",t:"General"},
+  {e:"tight",a:"محكم / ضيق / شديد",ex:"The lid was too tight.",em:"🔒",t:"General"},
+  {e:"tiny",a:"صغير جدًا / ضئيل",ex:"The baby has tiny hands.",em:"🐜",t:"General"},
+  {e:"tip",a:"نصيحة / طرف / بقشيش",ex:"She gave me a useful tip.",em:"💡",t:"General"},
+  {e:"totally",a:"تمامًا / كليًا",ex:"I totally agree.",em:"✅",t:"General"},
+  {e:"transfer",a:"ينقل / يحول / انتقال",ex:"She transferred to a new school.",em:"🔄",t:"General"},
+  {e:"transition",a:"تحول / انتقال",ex:"The transition to digital was smooth.",em:"🔄",t:"General"},
+  {e:"treat",a:"يعالج / يتعامل مع / يكرم",ex:"She treated him with kindness.",em:"💊",t:"General"},
+  {e:"trial",a:"محاكمة / تجربة / اختبار",ex:"The trial lasted two weeks.",em:"⚖️",t:"General"},
+  {e:"typical",a:"نموذجي / معتاد",ex:"This is a typical example.",em:"🌟",t:"General"},
+  {e:"typically",a:"عادةً / بشكل نموذجي",ex:"She typically wakes early.",em:"🌟",t:"General"},
+  {e:"ultimately",a:"في المحصلة / في النهاية",ex:"He ultimately succeeded.",em:"🏁",t:"General"},
+  {e:"unexpected",a:"غير متوقع",ex:"It was an unexpected surprise.",em:"😲",t:"General"},
+  {e:"unfortunately",a:"للأسف",ex:"Unfortunately, she missed the train.",em:"😟",t:"General"},
+  {e:"union",a:"اتحاد / نقابة",ex:"The union went on strike.",em:"🤝",t:"General"},
+  {e:"unique",a:"فريد / لا مثيل له",ex:"Her style is truly unique.",em:"✨",t:"General"},
+  {e:"universe",a:"كون / عالم",ex:"The universe is vast.",em:"🌌",t:"General"},
+  {e:"unnecessary",a:"غير ضروري",ex:"Avoid unnecessary risks.",em:"🚫",t:"General"},
+  {e:"unpleasant",a:"غير مريح / كريه",ex:"The smell was unpleasant.",em:"😕",t:"General"},
+  {e:"unusual",a:"غير عادي / نادر",ex:"That's an unusual colour.",em:"🔀",t:"General"},
+  {e:"upper",a:"علوي / أعلى",ex:"She lives on the upper floor.",em:"⬆️",t:"General"},
+  {e:"urge",a:"يحثّ / رغبة / ملحّة",ex:"She felt an urge to leave.",em:"😤",t:"General"},
+  {e:"useful",a:"مفيد / نافع",ex:"This guide is very useful.",em:"💡",t:"General"},
+  {e:"vehicle",a:"مركبة / وسيلة نقل",ex:"A vehicle blocked the road.",em:"🚗",t:"General"},
+  {e:"via",a:"عبر / بواسطة",ex:"She travelled via Dubai.",em:"🛣️",t:"General"},
+  {e:"vision",a:"هدف / بصيرة / رؤية",ex:"She has a clear vision.",em:"👁️",t:"General"},
+  {e:"vital",a:"ضروري / حيوي",ex:"Water is vital for life.",em:"❤️",t:"General"},
+  {e:"warn",a:"يحذّر",ex:"The sign warns of danger.",em:"⚠️",t:"General"},
+  {e:"weak",a:"ضعيف",ex:"He felt weak after the illness.",em:"💪",t:"General"},
+  {e:"wear",a:"يرتدي / يبلى",ex:"She wears glasses.",em:"⚖️",t:"General"},
+  {e:"weight",a:"وزن / ثقل",ex:"She lost weight quickly.",em:"⚖️",t:"General"},
+  {e:"wide",a:"واسع / عريض",ex:"The road is very wide.",em:"📏",t:"General"},
+  {e:"witness",a:"شاهد / يشهد",ex:"She was a witness to the accident.",em:"👁️",t:"General"},
+  {e:"worse",a:"أسوأ",ex:"Things got worse.",em:"😔",t:"General"},
+  {e:"worst",a:"الأسوأ",ex:"This is the worst day ever.",em:"😖",t:"General"},
+  {e:"wound",a:"جرح / يجرح",ex:"He had a deep wound.",em:"🩹",t:"General"},
+  {e:"wrap",a:"يغلّف / يلف",ex:"Wrap the gift carefully.",em:"🎁",t:"General"},
+  {e:"yet",a:"بعد / مع ذلك / لم يزل",ex:"Has she arrived yet?",em:"⏰",t:"General"},
+];
+
+// =============================================
+// APP LOGIC
+// =============================================
+
+const WORDS_PER_DAY = 5;
+const totalDays = Math.ceil(allWords.length / WORDS_PER_DAY);
+
+let currentDay = 1;
+let dayWords = [];
+let currentIndex = 0;
+let knownSet = new Set();
+let isFlipped = false;
+
+function getStorageKey(day) { return `vocab_day_${day}`; }
+
+async function loadKnownFromStorage(day) {
+  try {
+    const res = await window.storage.get(getStorageKey(day));
+    if (res && res.value) return new Set(JSON.parse(res.value));
+  } catch(e) {}
+  return new Set();
+}
+
+async function saveKnown(day, known) {
+  try {
+    await window.storage.set(getStorageKey(day), JSON.stringify([...known]));
+  } catch(e) {}
+}
+
+async function loadDay(day) {
+  currentDay = parseInt(day);
+  const start = (currentDay - 1) * WORDS_PER_DAY;
+  dayWords = allWords.slice(start, start + WORDS_PER_DAY);
+  currentIndex = 0;
+  knownSet = await loadKnownFromStorage(currentDay);
+  isFlipped = false;
+
+  document.getElementById('dayBadge').textContent = `اليوم ${currentDay}`;
+  document.getElementById('daySelect').value = currentDay;
+  document.getElementById('statDayNum').textContent = currentDay;
+  document.getElementById('statTotal').textContent = dayWords.length;
+
+  // Check if day complete
+  if (knownSet.size >= dayWords.length) {
+    showDoneScreen();
+    return;
+  }
+
+  // Find first unlearned
+  while (currentIndex < dayWords.length && knownSet.has(currentIndex)) {
+    currentIndex++;
+  }
+  if (currentIndex >= dayWords.length) currentIndex = 0;
+
+  document.getElementById('mainArea').style.display = 'block';
+  document.getElementById('doneScreen').classList.remove('visible');
+
+  renderCard();
+  renderPills();
+  updateProgress();
+}
+
+function renderCard() {
+  if (!dayWords[currentIndex]) return;
+  const w = dayWords[currentIndex];
+  isFlipped = false;
+  const card = document.getElementById('flashcard');
+  card.classList.remove('flipped');
+
+  document.getElementById('cardEmoji').textContent = w.em;
+  document.getElementById('cardEnglish').textContent = w.e;
+  document.getElementById('cardTopic').textContent = w.t.toUpperCase();
+  document.getElementById('cardArabic').textContent = w.a;
+  document.getElementById('cardExample').textContent = w.ex;
+  document.getElementById('cardNumber').textContent = `${currentIndex + 1} / ${dayWords.length}`;
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('flashcard').classList.toggle('flipped', isFlipped);
+}
+
+function renderPills() {
+  const pills = document.getElementById('wordPills');
+  pills.innerHTML = '';
+  dayWords.forEach((w, i) => {
+    const d = document.createElement('div');
+    d.className = 'word-pill' + (i === currentIndex ? ' active' : '') + (knownSet.has(i) ? ' known' : '');
+    d.textContent = w.e;
+    d.onclick = () => { currentIndex = i; isFlipped = false; renderCard(); renderPills(); };
+    pills.appendChild(d);
+  });
+}
+
+function updateProgress() {
+  const pct = (knownSet.size / dayWords.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `الكلمة ${currentIndex + 1} من ${dayWords.length}`;
+  document.getElementById('knownCount').textContent = `✓ ${knownSet.size}`;
+  document.getElementById('totalBadge').textContent = `إجمالي الكلمات: ${allWords.length} | يوم ${currentDay} من ${totalDays}`;
+}
+
+async function markKnew() {
+  knownSet.add(currentIndex);
+  await saveKnown(currentDay, knownSet);
+  updateProgress();
+
+  if (knownSet.size >= dayWords.length) {
+    showDoneScreen();
+    return;
+  }
+  nextWord();
+}
+
+async function markAgain() {
+  knownSet.delete(currentIndex);
+  await saveKnown(currentDay, knownSet);
+  updateProgress();
+  nextWord();
+}
+
+function nextWord() {
+  let next = (currentIndex + 1) % dayWords.length;
+  let tries = 0;
+  while (knownSet.has(next) && tries < dayWords.length) {
+    next = (next + 1) % dayWords.length;
+    tries++;
+  }
+  currentIndex = next;
+  isFlipped = false;
+  renderCard();
+  renderPills();
+  updateProgress();
+}
+
+function prevWord() {
+  currentIndex = (currentIndex - 1 + dayWords.length) % dayWords.length;
+  isFlipped = false;
+  renderCard();
+  renderPills();
+  updateProgress();
+}
+
+function showDoneScreen() {
+  document.getElementById('mainArea').style.display = 'none';
+  const done = document.getElementById('doneScreen');
+  done.classList.add('visible');
+  document.getElementById('statKnew').textContent = knownSet.size;
+  document.getElementById('statTotal').textContent = dayWords.length;
+  document.getElementById('statDayNum').textContent = currentDay;
+}
+
+function nextDay() {
+  const next = Math.min(currentDay + 1, totalDays);
+  document.getElementById('daySelect').value = next;
+  loadDay(next);
+}
+
+// Build day selector
+function buildDaySelector() {
+  const sel = document.getElementById('daySelect');
+  for (let i = 1; i <= totalDays; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    const start = (i-1)*WORDS_PER_DAY;
+    opt.textContent = `يوم ${i} — ${allWords[start]?.e || ''}`;
+    sel.appendChild(opt);
+  }
+}
+
+buildDaySelector();
+loadDay(1);
+</script>
+</body>
+</html>
